@@ -53,8 +53,7 @@ export default defineComponent({
   },
   mounted() {
     console.log('Mounted')
-    console.log('LIFF ID:', import.meta.env.VITE_LIFF_ID)
-    initializeLiff(import.meta.env.VITE_LIFF_ID || '')
+    initializeLiff('2007135016-8GpyXVpN')
       .then(() => {
         liff
           .getProfile()

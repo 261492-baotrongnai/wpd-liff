@@ -53,8 +53,7 @@ export default defineComponent({
   },
   mounted() {
     console.log('Mounted')
-    console.log('LIFF ID:', import.meta.env.VITE_LIFF_ID_2)
-    initializeLiff(import.meta.env.VITE_LIFF_ID_2 || '')
+    initializeLiff('2007135016-OrLBVXLa')
       .then(() => {
         liff
           .getProfile()
