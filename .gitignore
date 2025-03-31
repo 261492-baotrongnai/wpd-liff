@@ -32,4 +32,4 @@ coverage
 
 *.tsbuildinfo
 
-docker-compose.ymal
+docker-compose.yaml
