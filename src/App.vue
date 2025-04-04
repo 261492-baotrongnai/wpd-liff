@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
+import { RouterView } from 'vue-router'
 // import HelloPage from '@/pages/hello/index.vue'
 // import MainPage from '@/pages/index.vue'
 </script>
 
 <template>
   <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
+    <!-- <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
 
     <div class="wrapper">
       <HelloWorld msg="You did it!" />
@@ -15,7 +15,8 @@ import { RouterLink, RouterView } from 'vue-router'
         <RouterLink to="/">main page</RouterLink>
         <RouterLink to="/hello">Hello page</RouterLink>
       </nav>
-    </div>
+    </div> -->
+    <div>WanPorDee LIFF</div>
   </header>
 
   <RouterView />

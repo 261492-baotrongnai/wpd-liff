@@ -1,4 +1,3 @@
-
 import liff from '@line/liff'
 import axios from 'axios'
 
@@ -58,8 +57,8 @@ export async function verifyIdToken(idtoken: string) {
     const user = response.data
     console.log('Verification successful:', user)
     return user
-  } catch (err) {
-    console.error('Failed to verify ID token:', err)
+  } catch {
+    logout()
   }
 }
 

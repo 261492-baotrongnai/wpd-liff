@@ -48,9 +48,6 @@ export default defineComponent({
               })
             }
           })
-          .catch(() => {
-            this.message = 'Failed to retrieve profile.'
-          })
       })
       .catch((err) => {
         this.error = err.message
