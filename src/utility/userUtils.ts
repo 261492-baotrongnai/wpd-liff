@@ -5,7 +5,7 @@ interface User {
 }
 
 export const getUser = async (): Promise<User> => {
-  console.log('API_URL', import.meta.env.API_URL)
+  console.log('VITE_API_URL', import.meta.env.VITE_API_URL)
   const response = await axios(`${import.meta.env.API_URL}`, {
     method: 'GET',
     headers: {

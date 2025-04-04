@@ -3,7 +3,10 @@
 
 interface ImportMetaEnv {
   readonly BASE_URL: string
-  readonly API_URL: string
+  readonly VITE_API_URL: string
+  readonly VITE_LIFF_ID: string
+  readonly VITE_LIFF_ID_2: string
+  readonly VITE_SECRET: string
   // Add other environment variables here if needed
 }
 
