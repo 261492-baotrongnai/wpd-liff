@@ -27,7 +27,6 @@ export default defineComponent({
     }
   },
   mounted() {
-    console.log('Mounted')
     initializeLiff('VITE_LIFF_ID')
       .then(() => {
         liff

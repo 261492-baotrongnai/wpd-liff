@@ -26,7 +26,6 @@ export function getEnvVariable(key: string): string | undefined {
 export async function initializeLiff(liffIdEnv: string): Promise<void> {
   try {
     const liffId = getEnvVariable(liffIdEnv) || 'liffId not found'
-    console.log('LIFF ID:', liffId)
     await liff.init({ liffId })
     if (!liff.isLoggedIn()) {
       liff.login()
@@ -55,7 +54,6 @@ export async function verifyIdToken(idtoken: string) {
     }
 
     const user = response.data
-    console.log('Verification successful:', user)
     return user
   } catch {
     logout()
