@@ -10,6 +10,9 @@ lerna-debug.log*
 .env
 .env.*
 
+entrypoint.sh
+generate-env.js
+
 node_modules
 .DS_Store
 dist

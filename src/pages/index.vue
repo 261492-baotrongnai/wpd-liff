@@ -14,7 +14,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import liff from '@line/liff'
-import { initializeLiff, verifyIdToken, logout } from '@/utility/liffUtils'
+import { initializeLiff, verifyIdToken, logout } from '../utility/liffUtils'
 
 export default defineComponent({
   name: 'IndexPage',
