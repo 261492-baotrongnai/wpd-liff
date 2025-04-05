@@ -60,4 +60,4 @@ jobs:
           script: |
             cd wpd-project
             docker pull apichayauwu/wpd-liff:${{ steps.vars.outputs.tag }}
-            docker-compose up -d --build --pull always
+            docker compose up -d --build --pull always
