@@ -57,7 +57,8 @@ export async function verifyIdToken(idtoken: string) {
     const user = response.data
     return user
   } catch {
-    logout()
+    // logout()
+    console.error('Failed to verify ID token')
   }
 }
 

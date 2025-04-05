@@ -36,6 +36,7 @@ export default defineComponent({
           })
           .then(() => {
             this.idtoken = liff.getIDToken() || ''
+            console.log('ID Token:', this.idtoken)
             if (this.idtoken) {
               verifyIdToken(this.idtoken).then((user) => {
                 this.user = user // Assign the resolved value to this.user
