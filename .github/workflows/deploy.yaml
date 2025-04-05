@@ -36,11 +36,11 @@ jobs:
       - name: Create .env.production
         run: |
           cat <<EOF > .env.production
-          VITE_LIFF_ID=${{ secrets.VITE_LIFF_ID }}
-          VITE_LIFF_ID_2=${{ secrets.VITE_LIFF_ID_2 }}
-          VITE_LIFF_ID_ACHIEVEMENT=${{ secrets.VITE_LIFF_ID_ACHIEVEMENT }}
-          BASE_URL=${{ secrets.BASE_URL }}
-          VITE_API_URL=${{ secrets.VITE_API_URL }}
+          VITE_LIFF_ID=${{ vars.VITE_LIFF_ID }}
+          VITE_LIFF_ID_2=${{ vars.VITE_LIFF_ID_2 }}
+          VITE_LIFF_ID_ACHIEVEMENT=${{ vars.VITE_LIFF_ID_ACHIEVEMENT }}
+          BASE_URL=${{ vars.BASE_URL }}
+          VITE_API_URL=${{ vars.VITE_API_URL }}
           EOF
 
       - name: Run build script
