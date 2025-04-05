@@ -57,7 +57,9 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
+          envs: FRONTEND_VERSION
           script: |
+            export FRONTEND_VERSION=${{ steps.vars.outputs.tag }}
             cd wpd-project
-            docker pull apichayauwu/wpd-liff:${{ steps.vars.outputs.tag }}
+            docker pull apichayauwu/wpd-liff:$FRONTEND_VERSION
             docker compose up -d --build --pull always
