@@ -7,7 +7,7 @@ interface ImportMetaEnv {
   readonly VITE_LIFF_ID: string
   readonly VITE_LIFF_ID_2: string
   readonly VITE_LIFF_ID_ACHIEVEMENT: string
-  readonly VITE_SECRET: string
+  readonly VITE_LIFF_ID_USER_CLASSIFICATION: string
   // Add other environment variables here if needed
 }
 
