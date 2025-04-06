@@ -1,6 +1,6 @@
 <template>
   <div style="display: flex; flex-direction: column; justify-content: center">
-    <div style="justify-items: center">
+    <div style="justify-items: center; display: flex; flex-direction: column; align-items: center">
       <div v-if="profilePic" class="profile-pic-container">
         <img :src="profilePic" alt="Profile Picture" class="profile-pic" />
       </div>

@@ -1,8 +1,5 @@
 <template>
-  <div>
-    <!-- Add your content here -->
-    UserClassification
-  </div>
+  <h3>ยินดีต้อนรับสู่ "หวานพอดี" นะคะ</h3>
 </template>
 <script lang="ts">
 import { initializeLiff } from '../../utility/liffUtils'
