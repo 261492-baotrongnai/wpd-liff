@@ -36,3 +36,6 @@ coverage
 *.tsbuildinfo
 
 docker-compose.yaml
+
+auto-imports.d.ts
+components.d.ts
