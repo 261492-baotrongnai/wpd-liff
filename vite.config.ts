@@ -19,6 +19,7 @@ export default defineConfig(({ mode }) => {
         },
       },
       logLevel: 'debug',
+      allowedHosts: ['29b2-171-97-207-62.ngrok-free.app'],
     },
     resolve: {
       alias: {

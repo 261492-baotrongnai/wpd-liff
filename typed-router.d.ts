@@ -26,5 +26,6 @@ declare module 'vue-router/auto-routes' {
     '/achievement/ProgressCoin': RouteRecordInfo<'/achievement/ProgressCoin', '/achievement/ProgressCoin', Record<never, never>, Record<never, never>>,
     '/achievement/UserFrame': RouteRecordInfo<'/achievement/UserFrame', '/achievement/UserFrame', Record<never, never>, Record<never, never>>,
     '/user-classification/': RouteRecordInfo<'/user-classification/', '/user-classification', Record<never, never>, Record<never, never>>,
+    '/user-classification/PopupEnterCode': RouteRecordInfo<'/user-classification/PopupEnterCode', '/user-classification/PopupEnterCode', Record<never, never>, Record<never, never>>,
   }
 }
