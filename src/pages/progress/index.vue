@@ -6,7 +6,7 @@
       <button class="share-button">แชร์ให้คนอื่นดู</button>
     </div>
 
-    <USeparator orientation="horizontal" size="xs" color="neutral" />
+    <USeparator orientation="horizontal" size="xs" color="black" />
     <ProgressSection />
   </div>
 </template>

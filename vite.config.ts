@@ -18,12 +18,21 @@ export default defineConfig(({ mode }) => {
       ui({
         ui: {
           separator: {
+            // varients: {
+            //   color: {
+            //     neutral: {
+            //       backgroundColor: 'black',
+            //     },
+            //   },
+            // },
             compoundVariants: [
               {
                 orientation: 'horizontal',
                 size: 'xs',
+                color: 'black',
                 class: {
-                  border: 'border-t-[0.1px]',
+                  border: 'border-t-[0.4px]',
+                  borderColor: 'black',
                 },
               },
               {
