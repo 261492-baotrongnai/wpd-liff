@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
-// import HelloPage from '@/pages/hello/index.vue'
-// import MainPage from '@/pages/index.vue'
 </script>
 
 <template>

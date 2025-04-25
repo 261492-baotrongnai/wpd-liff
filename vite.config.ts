@@ -1,6 +1,6 @@
 import { fileURLToPath, URL } from 'node:url'
 
-import { defineConfig, loadEnv } from 'vite'
+import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import VueRouter from 'unplugin-vue-router/vite'
@@ -8,8 +8,7 @@ import ui from '@nuxt/ui/vite'
 import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
-export default defineConfig(({ mode }) => {
-  // const env = loadEnv(mode, process.cwd(), '')
+export default defineConfig(({}) => {
   return {
     plugins: [
       vue(),
@@ -118,15 +117,12 @@ export default defineConfig(({ mode }) => {
         },
       },
       logLevel: 'debug',
-      allowedHosts: ['29b2-171-97-207-62.ngrok-free.app'],
+      allowedHosts: ['4pg05g3k-5173.asse.devtunnels.ms'],
     },
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),
       },
     },
-    // define: {
-    //   'process.env': env,
-    // },
   }
 })
