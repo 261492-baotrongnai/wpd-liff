@@ -37,7 +37,7 @@
     <ProgressCoin :streaks="65" />
 
     <!-- Mali -->
-    <Mali :streaks="50" />
+    <Mali :streaks="10" />
   </div>
 </template>
 

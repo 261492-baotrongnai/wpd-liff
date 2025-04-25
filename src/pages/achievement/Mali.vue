@@ -171,10 +171,13 @@ export default {
   margin-top: 10px;
 }
 
-.mali-image img {
-  width: 100px; /* Adjust the width */
+.mali-image {
+  width: 80%; /* Adjust the width */
   height: auto; /* Maintain aspect ratio */
   margin-top: 10px; /* Optional: Add spacing */
+  margin-bottom: 10px;
+  margin-inline: auto; /* Center the image */
+  padding-inline: 20%; /* Optional: Add spacing */
 }
 
 .share-button {
