@@ -1,7 +1,7 @@
 import liff from '@line/liff'
 import axios from 'axios'
-// Default to localhost if not set
-// Extend the Window interface to include the 'env' property
+
+const API = import.meta.env.VITE_API_URL
 
 /**
  * Retrieves the value of an environment variable from import.meta.env.
@@ -45,8 +45,8 @@ export async function initializeLiff(liffIdEnv: string): Promise<void> {
  */
 export async function verifyIdToken(idtoken: string) {
   try {
-    const response = await axios.post(`/api/users/verify`, {
-      headers: { 'Access-Control-Allow-Origin': '*' },
+    const response = await axios.post(`${API}/users/verify`, {
+      headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' },
       idToken: idtoken, // Match the backend's expected key
     })
 
