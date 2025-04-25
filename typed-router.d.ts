@@ -31,6 +31,8 @@ declare module 'vue-router/auto-routes' {
     '/progress/ProgressNav': RouteRecordInfo<'/progress/ProgressNav', '/progress/ProgressNav', Record<never, never>, Record<never, never>>,
     '/progress/ProgressSection': RouteRecordInfo<'/progress/ProgressSection', '/progress/ProgressSection', Record<never, never>, Record<never, never>>,
     '/user-classification/': RouteRecordInfo<'/user-classification/', '/user-classification', Record<never, never>, Record<never, never>>,
+    '/user-classification/CommonTerm': RouteRecordInfo<'/user-classification/CommonTerm', '/user-classification/CommonTerm', Record<never, never>, Record<never, never>>,
     '/user-classification/PopupEnterCode': RouteRecordInfo<'/user-classification/PopupEnterCode', '/user-classification/PopupEnterCode', Record<never, never>, Record<never, never>>,
+    '/user-classification/TestTerm': RouteRecordInfo<'/user-classification/TestTerm', '/user-classification/TestTerm', Record<never, never>, Record<never, never>>,
   }
 }

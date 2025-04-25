@@ -1,46 +1,60 @@
 <template>
-  <h3 class="greeting">ยินดีต้อนรับสู่ "หวานพอดี" นะคะ</h3>
-  <span class="instruction">ก่อนเข้าใช้งาน กรุณากดเพื่อเลือกประเภทของคุณค่ะ</span>
-  <div class="button-container">
-    <button
-      @click="selectButton('common')"
-      :class="['box', 'common-user', { selected: commonSelected }]"
-    >
-      ผู้ใช้งานทั่วไป
-    </button>
-    <button @click="selectButton('test')" :class="['box', 'test-user', { selected: testSelected }]">
-      กลุ่มทดสอบ
-    </button>
-  </div>
+  <img src="https://i.postimg.cc/Yq1bKt42/logo.png" class="px-30" />
+  <div v-if="!showEnterCode && !showCommonTerm">
+    <h3 class="greeting">ยินดีต้อนรับสู่ "หวานพอดี" นะคะ</h3>
+    <span class="instruction">ก่อนเข้าใช้งาน กรุณากดเพื่อเลือกประเภทของคุณค่ะ</span>
+    <div class="button-container">
+      <button
+        @click="selectButton('common')"
+        :class="['box', 'common-user', { selected: commonSelected }]"
+      >
+        ผู้ใช้งานทั่วไป
+      </button>
+      <button
+        @click="selectButton('test')"
+        :class="['box', 'test-user', { selected: testSelected }]"
+      >
+        กลุ่มทดสอบ
+      </button>
+    </div>
 
-  <div v-if="commonSelected" class="next-container">
-    <p class="instruction next">ข้อมูลของคุณจะถูกเก็บเป็นส่วนตัว</p>
-    <button @click="commonSuccess" class="next-button common-user">เข้าใช้งานได้เลย !</button>
-  </div>
-  <div v-if="testSelected" class="next-container">
-    <p class="instruction next">ผู้ดูแลระบบจะสามารถดูข้อมูลการบันทึกเพื่อติดตามและพัฒนาระบบได้</p>
-    <button @click="showEnterCode = true" class="next-button test-user">ใส่โค้ด</button>
+    <div v-if="commonSelected" class="next-container">
+      <p class="instruction next">ข้อมูลของคุณจะถูกเก็บเป็นส่วนตัว</p>
+      <button @click="showCommonTerm = true" class="next-button common-user">
+        ต่อไป
+        <UIcon name="i-lucide-arrow-right" class="size-5" />
+      </button>
+    </div>
+    <div v-if="testSelected" class="next-container">
+      <p class="instruction next">ผู้ดูแลระบบจะสามารถดูข้อมูลการบันทึกเพื่อติดตามและพัฒนาระบบได้</p>
+      <button @click="showEnterCode = true" class="next-button test-user">ใส่โค้ด</button>
+    </div>
   </div>
 
   <!-- Use the PopupEnterCode component -->
-  <PopupEnterCode :visible="showEnterCode" @close="showEnterCode = false" @submit="enterCode" />
+  <PopupEnterCode :visible="showEnterCode" @close="showEnterCode = false" />
+
+  <CommonTerm v-if="showCommonTerm" />
 </template>
 
 <script lang="ts">
 import { initializeLiff } from '../../utility/liffUtils'
 import liff from '@line/liff'
 import PopupEnterCode from './PopupEnterCode.vue'
+import CommonTerm from './CommonTerm.vue'
 
 export default {
   name: 'UserClassification',
   components: {
     PopupEnterCode,
+    CommonTerm,
   },
   data() {
     return {
       commonSelected: false,
       testSelected: false,
       showEnterCode: false,
+      showCommonTerm: false,
     }
   },
   methods: {
@@ -52,10 +66,6 @@ export default {
         this.commonSelected = false
         this.testSelected = true
       }
-    },
-    enterCode(code: string) {
-      console.log('Code entered:', code)
-      // Add navigation logic here
     },
     commonSuccess() {
       liff.closeWindow()
@@ -126,32 +136,19 @@ export default {
   margin-top: 10px;
 }
 .next-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
   color: rgb(48, 48, 48);
   padding: 10px 20px;
   margin: 20px;
   border: none;
   border-radius: 5px;
   font-size: 16px;
+  width: fit-content;
 }
-.popup-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.popup-content {
-  background-color: white;
-  padding: 20px;
-  border-radius: 10px;
-  width: 80%;
-  max-width: 400px;
-  text-align: center;
-}
+
 .back-button {
   position: absolute;
   top: 10px;
