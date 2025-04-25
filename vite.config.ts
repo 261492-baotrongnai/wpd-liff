@@ -117,7 +117,7 @@ export default defineConfig(({}) => {
         },
       },
       logLevel: 'debug',
-      allowedHosts: ['4pg05g3k-5173.asse.devtunnels.ms'],
+      allowedHosts: true,
     },
     resolve: {
       alias: {

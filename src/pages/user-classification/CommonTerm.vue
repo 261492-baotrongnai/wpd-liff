@@ -41,12 +41,7 @@
 import liff from '@line/liff'
 export default {
   name: 'CommonTerm',
-  // props: {
-  //   visible: {
-  //     type: Boolean,
-  //     required: true,
-  //   },
-  // },
+
   data() {
     return {
       isAgreed: false,
