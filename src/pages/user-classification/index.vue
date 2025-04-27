@@ -67,13 +67,14 @@ export default {
         this.testSelected = true
       }
     },
-    commonSuccess() {
-      liff.closeWindow()
-    },
   },
   mounted() {
     initializeLiff('VITE_LIFF_ID_USER_CLASSIFICATION')
-      .then(() => {})
+      .then(() => {
+        console.log('LIFF initialized')
+        const idToken = liff.getIDToken()
+        console.log('ID Token:', idToken)
+      })
       .catch((err) => {
         console.error(err.message)
       })

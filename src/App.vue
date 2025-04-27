@@ -16,6 +16,7 @@ import { RouterView } from 'vue-router'
     </div> -->
   <!-- <div>WanPorDee LIFF</div> -->
   <!-- </header> -->
+
   <UApp><RouterView /></UApp>
 </template>
 

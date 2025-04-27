@@ -37,6 +37,7 @@
 </template>
 
 <script lang="ts">
+import { register } from '@/utility/liffUtils'
 import liff from '@line/liff'
 export default {
   name: 'TestTerm',
@@ -53,9 +54,13 @@ export default {
   },
   methods: {
     testSuccess() {
-      // Handle the success action here
-      // ตรงนี้ควร post ไปที่ api enter code
       console.log('Test success with code:', this.code)
+      const idToken = liff.getIDToken()
+      if (idToken) {
+        register(idToken, this.code)
+      } else {
+        console.error('ID Token is null')
+      }
       liff.closeWindow()
     },
   },

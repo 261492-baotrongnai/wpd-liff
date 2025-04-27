@@ -38,6 +38,7 @@
 </template>
 
 <script lang="ts">
+import { register } from '@/utility/liffUtils'
 import liff from '@line/liff'
 export default {
   name: 'CommonTerm',
@@ -49,6 +50,13 @@ export default {
   },
   methods: {
     commonSuccess() {
+      const idToken = liff.getIDToken()
+      console.log('Common success with ID token:', idToken)
+      if (idToken) {
+        register(idToken)
+      } else {
+        console.error('ID token is null')
+      }
       liff.closeWindow()
     },
   },
