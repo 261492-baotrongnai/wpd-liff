@@ -1,7 +1,7 @@
 import liff from '@line/liff'
 import axios from 'axios'
 
-const API = import.meta.env.VITE_API_URL
+const API = '/api'
 const liff_user_classification = import.meta.env.VITE_LIFF_ID_USER_CLASSIFICATION
 
 /**
@@ -40,8 +40,9 @@ export async function login(idToken: string) {
     const response = await axios.post(`${API}/auth/login`, { idToken })
 
     const acct = response.data.access_token
-    console.log('User logged in successfully:', acct)
-    getUserProfile(acct)
+    console.log('User logged in successfully:', '\n access_token:', acct)
+    const result = await getUserProfile(acct)
+    console.log('User internalId:', result)
     return acct
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 401) {
@@ -68,6 +69,7 @@ export async function verifyIdToken(id_token: string) {
     }
 
     const result = response.data
+
     return result
   } catch {
     logout()
@@ -110,11 +112,11 @@ export async function getUserProfile(acct: string) {
     const response = await axios.get(`${API}/users/profile`, {
       headers: {
         Accept: 'application/json',
-        'Content-Type': 'application/json',
         Authorization: `Bearer ${acct}`,
       },
     })
-    console.log(response.data)
+    // console.log(response.data)
+    return response.data.internalId
   } catch (error) {
     console.error('Failed to get user profile:', error)
   }
