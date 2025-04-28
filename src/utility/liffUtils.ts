@@ -2,7 +2,7 @@ import liff from '@line/liff'
 import axios from 'axios'
 
 const API = import.meta.env.VITE_API_URL
-// const liff_user_classification = import.meta.env.VITE_LIFF_ID_USER_CLASSIFICATION
+const liff_user_classification = import.meta.env.VITE_LIFF_ID_USER_CLASSIFICATION
 
 /**
  * Retrieves the value of an environment variable from import.meta.env.
@@ -45,7 +45,8 @@ export async function login(idToken: string) {
     return acct
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 401) {
-      liff.openWindow({ url: 'https://liff.line.me/2007211748-VXexNPDa', external: false })
+      window.location.href = `${API}/auth/redirect?liffId=${liff_user_classification}`
+      // liff.openWindow({ url: `https://liff.line.me/${liff_user_classification}`, external: false })
     }
     if (axios.isAxiosError(error) && error.response?.status === 500) {
       logout()
