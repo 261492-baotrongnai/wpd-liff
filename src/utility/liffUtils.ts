@@ -56,19 +56,19 @@ export async function login(idToken: string) {
   }
 }
 
-export async function verifyIdToken(idtoken: string) {
+export async function verifyIdToken(id_token: string) {
   try {
     const response = await axios.post(`${API}/users/verify`, {
       headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' },
-      idToken: idtoken, // Match the backend's expected key
+      idToken: id_token, // Match the backend's expected key
     })
 
     if (response.status < 200 || response.status >= 300) {
       throw new Error(`API error: ${response.statusText}`)
     }
 
-    const user = response.data
-    return user
+    const result = response.data
+    return result
   } catch {
     logout()
     console.error('Failed to verify ID token')
@@ -109,6 +109,7 @@ export async function getUserProfile(acct: string) {
   try {
     const response = await axios.get(`${API}/users/profile`, {
       headers: {
+        Accept: 'application/json',
         'Content-Type': 'application/json',
         Authorization: `Bearer ${acct}`,
       },
