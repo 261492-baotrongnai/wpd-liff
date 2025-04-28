@@ -45,7 +45,7 @@ export async function login(idToken: string) {
     return acct
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 401) {
-      window.location.href = `${API}/auth/redirect?liffId=${liff_user_classification}`
+      window.location.href = `https://liff.line.me/${liff_user_classification}`
       // liff.openWindow({ url: `https://liff.line.me/${liff_user_classification}`, external: false })
     }
     if (axios.isAxiosError(error) && error.response?.status === 500) {
