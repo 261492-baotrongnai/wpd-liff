@@ -21,25 +21,37 @@ export async function initializeLiff(liffIdEnv: string): Promise<void> {
   if (liff.isLoggedIn()) {
     const idtoken = (await liff.getIDToken()) || ''
     console.log('ID Token:', idtoken)
-    login(idtoken)
-      .then((token) => {
-        const access_token = token
-        console.log('Access Token:', access_token)
+    const isValid = await verifyIdToken(idtoken)
+    console.log('ID Token is valid:', isValid)
+    if (isValid) {
+      login(idtoken)
+        .then((token) => {
+          const access_token = token
+          console.log('Access Token:', access_token)
 
-        getUserProfile(access_token).then((internalId) => {
-          const test_iid = internalId
-          console.log('Internal ID:', test_iid)
+          getUserProfile(access_token).then((internalId) => {
+            const test_iid = internalId
+            console.log('Internal ID:', test_iid)
+          })
         })
-      })
-      .catch((error) => {
-        if (axios.isAxiosError(error) && error.response?.status === 401) {
-          console.error('Error logging in:', error)
-          window.location.href = '/user-classification'
-        } else {
-          console.error('Unexpected error:', error)
-          liff.logout()
-        }
-      })
+        .catch((error) => {
+          if (axios.isAxiosError(error) && error.response?.status === 401) {
+            console.error(
+              'Non registered user, please agree with terms and conditions first',
+              error,
+            )
+            // liff.openWindow({ url: `https://liff.line.me/${liff_user_classification}` })
+            window.location.href = `https://liff.line.me/${liff_user_classification}`
+          } else {
+            console.error('Unexpected error:', error)
+            liff.logout()
+          }
+        })
+    } else {
+      console.log('ID Token is not valid, log in again')
+      liff.logout()
+      liff.login()
+    }
   } else {
     liff.login()
   }
@@ -68,12 +80,24 @@ export async function verifyIdToken(id_token: string) {
 }
 
 export async function initUserClassificationliff() {
-  await liff.init({
-    liffId: liff_user_classification,
-  })
-  if (!liff.isLoggedIn()) {
-    liff.login()
-  }
+  await liff
+    .init({
+      liffId: liff_user_classification,
+    })
+    .then(async () => {
+      if (!liff.isLoggedIn()) {
+        liff.login()
+      }
+      const idtoken = await liff.getIDToken()
+      if (!idtoken) throw new Error('ID token not found')
+      const isValid = await verifyIdToken(idtoken)
+      console.log('ID Token is valid:', isValid)
+      if (!isValid) {
+        console.log('ID Token is not valid, log in again')
+        liff.logout()
+        liff.login()
+      }
+    })
 }
 
 export async function register(idToken: string, program_code?: string) {
