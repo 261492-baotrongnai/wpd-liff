@@ -37,6 +37,7 @@ export async function initializeLiff(liffIdEnv: string): Promise<void> {
           window.location.href = '/user-classification'
         } else {
           console.error('Unexpected error:', error)
+          liff.logout()
         }
       })
   } else {
