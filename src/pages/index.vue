@@ -7,14 +7,17 @@
       <code>{{ error }}</code>
     </p>
     <p v-if="user">{{ user }}</p>
-    <button v-if="idtoken" @click="logout">Logout</button>
+    <p v-if="access_token">access_token: {{ access_token }}</p>
+    <p v-if="test_iid">test_iid: {{ test_iid }}</p>
+    <!-- <button v-if="idtoken" @click="logout">Logout</button> -->
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import liff from '@line/liff'
-import { initializeLiff, verifyIdToken, logout } from '../utility/liffUtils'
+// import liff from '@line/liff'
+import { initializeLiff } from '../utility/liffUtils'
+
 
 export default defineComponent({
   name: 'IndexPage',
@@ -24,37 +27,12 @@ export default defineComponent({
       error: '',
       idtoken: '',
       user: '',
+      access_token: '',
+      test_iid: '',
     }
   },
   mounted() {
     initializeLiff('VITE_LIFF_ID')
-      .then(() => {
-        liff
-          .getProfile()
-          .then((profile) => {
-            this.message = `Hello, ${profile.displayName}`
-          })
-          .then(() => {
-            this.idtoken = liff.getIDToken() || ''
-            console.log('ID Token:', this.idtoken)
-            if (this.idtoken) {
-              verifyIdToken(this.idtoken).then((user) => {
-                this.user = user // Assign the resolved value to this.user
-              })
-            }
-          })
-          .catch(() => {
-            this.message = 'Failed to retrieve profile.'
-          })
-      })
-      .catch((err) => {
-        this.error = err.message
-      })
-  },
-  methods: {
-    logout() {
-      logout()
-    },
   },
 })
 </script>

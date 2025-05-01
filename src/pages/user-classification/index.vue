@@ -38,8 +38,8 @@
 </template>
 
 <script lang="ts">
-import { initializeLiff } from '../../utility/liffUtils'
-import liff from '@line/liff'
+import { initUserClassificationliff } from '../../utility/liffUtils'
+// import liff from '@line/liff'
 import PopupEnterCode from './PopupEnterCode.vue'
 import CommonTerm from './CommonTerm.vue'
 
@@ -69,15 +69,7 @@ export default {
     },
   },
   mounted() {
-    initializeLiff('VITE_LIFF_ID_USER_CLASSIFICATION')
-      .then(() => {
-        console.log('LIFF initialized')
-        const idToken = liff.getIDToken()
-        console.log('ID Token:', idToken)
-      })
-      .catch((err) => {
-        console.error(err.message)
-      })
+    initUserClassificationliff()
   },
 }
 </script>

@@ -68,21 +68,12 @@ export default {
     }
   },
   mounted() {
-    initializeLiff('VITE_LIFF_ID_ACHIEVEMENT')
-      .then(() => {
-        liff
-          .getProfile()
-          .then((profile) => {
-            this.username = profile.displayName
-            this.profilePic = profile.pictureUrl || ''
-          })
-          .catch(() => {
-            console.error('Failed to retrieve profile pic.')
-          })
+    initializeLiff('VITE_LIFF_ID_ACHIEVEMENT').then(() => {
+      liff.getProfile().then((profile) => {
+        this.username = profile.displayName
+        this.profilePic = profile.pictureUrl || ''
       })
-      .catch((err) => {
-        console.error(err)
-      })
+    })
   },
 }
 </script>

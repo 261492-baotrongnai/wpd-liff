@@ -1,7 +1,7 @@
 import liff from '@line/liff'
 import axios from 'axios'
 
-const API = import.meta.env.VITE_PRODUCTION ?  import.meta.env.VITE_API_URL : '/api'
+const API = import.meta.env.VITE_PRODUCTION ? import.meta.env.VITE_API_URL : '/api'
 const liff_user_classification = import.meta.env.VITE_LIFF_ID_USER_CLASSIFICATION
 
 /**
@@ -14,66 +14,64 @@ export function getEnvVariable(key: string): string | undefined {
 }
 
 export async function initializeLiff(liffIdEnv: string): Promise<void> {
-  try {
-    const liffId = getEnvVariable(liffIdEnv) || 'liffId not found'
-    await liff.init({ liffId })
+  // try {
+  const liffId = getEnvVariable(liffIdEnv) || 'liffId not found'
+  await liff.init({ liffId })
+  console.log('LIFF initialized')
+  if (liff.isLoggedIn()) {
+    const idtoken = (await liff.getIDToken()) || ''
+    console.log('ID Token:', idtoken)
+    login(idtoken)
+      .then((token) => {
+        const access_token = token
+        console.log('Access Token:', access_token)
 
-    const idToken = liff.getIDToken()
-    if (
-      idToken &&
-      (await verifyIdToken(idToken)) &&
-      liffIdEnv !== 'VITE_LIFF_ID_USER_CLASSIFICATION'
-    ) {
-      login(idToken)
-    } else {
-      if (!liff.isLoggedIn() || (idToken && !(await verifyIdToken(idToken)))) {
-        liff.login()
-      }
-    }
-  } catch (error) {
-    console.error('LIFF initialization failed:', error)
+        getUserProfile(access_token).then((internalId) => {
+          const test_iid = internalId
+          console.log('Internal ID:', test_iid)
+        })
+      })
+      .catch((error) => {
+        if (axios.isAxiosError(error) && error.response?.status === 401) {
+          console.error('Error logging in:', error)
+          window.location.href = '/user-classification'
+        } else {
+          console.error('Unexpected error:', error)
+        }
+      })
+  } else {
+    liff.login()
   }
 }
 
 export async function login(idToken: string) {
-  try {
-    const response = await axios.post(`${API}/auth/login`, { idToken })
+  console.log('Logging in user with ID token')
+  const response = await axios.post(`${API}/auth/login`, { idToken })
 
-    const acct = response.data.access_token
-    console.log('User logged in successfully:', '\n access_token:', acct)
-    const result = await getUserProfile(acct)
-    console.log('User internalId:', result)
-    return acct
-  } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.status === 401) {
-      window.location.href = `https://liff.line.me/${liff_user_classification}`
-      // liff.openWindow({ url: `https://liff.line.me/${liff_user_classification}`, external: false })
-    }
-    if (axios.isAxiosError(error) && error.response?.status === 500) {
-      logout()
-    }
-
-    console.error('Failed to login user:', error)
-  }
+  const acct = response.data.access_token
+  console.log('User logged in successfully:', '\n access_token:', acct)
+  return acct
 }
 
 export async function verifyIdToken(id_token: string) {
-  try {
-    const response = await axios.post(`${API}/users/verify`, {
-      headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' },
-      idToken: id_token, // Match the backend's expected key
-    })
+  console.log('Verifying ID token:', id_token)
+  const response = await axios.post(`${API}/users/verify`, {
+    idToken: id_token, // Match the backend's expected key
+  })
+  console.log('ID token verified successfully:', response.data)
+  if (response.status < 200 || response.status >= 300) {
+    return false
+  }
+  const result = response.data
+  return result
+}
 
-    if (response.status < 200 || response.status >= 300) {
-      throw new Error(`API error: ${response.statusText}`)
-    }
-
-    const result = response.data
-
-    return result
-  } catch {
-    logout()
-    console.error('Failed to verify ID token')
+export async function initUserClassificationliff() {
+  await liff.init({
+    liffId: liff_user_classification,
+  })
+  if (!liff.isLoggedIn()) {
+    liff.login()
   }
 }
 
@@ -108,14 +106,14 @@ export function logout() {
 }
 
 export async function getUserProfile(acct: string) {
+  console.log('Getting user profile with access token: ', acct)
   try {
     const response = await axios.get(`${API}/users/profile`, {
       headers: {
-        Accept: 'application/json',
         Authorization: `Bearer ${acct}`,
       },
     })
-    // console.log(response.data)
+    console.log('getUserProfile.data: ', response.data)
     return response.data.internalId
   } catch (error) {
     console.error('Failed to get user profile:', error)

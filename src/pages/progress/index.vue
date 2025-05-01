@@ -38,20 +38,11 @@ export default {
     },
   },
   mounted() {
-    initializeLiff('VITE_LIFF_ID_PROGRESS')
-      .then(() => {
-        liff
-          .getProfile()
-          .then((profile) => {
-            console.log('Profile:', profile)
-          })
-          .catch((error) => {
-            console.error('Error getting profile:', error)
-          })
+    initializeLiff('VITE_LIFF_ID_PROGRESS').then(() => {
+      liff.getProfile().then((profile) => {
+        console.log('Profile:', profile)
       })
-      .catch((error) => {
-        console.error('Error initializing LIFF:', error)
-      })
+    })
   },
 }
 </script>
