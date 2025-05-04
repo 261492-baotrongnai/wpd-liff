@@ -14,46 +14,53 @@ export function getEnvVariable(key: string): string | undefined {
 }
 
 export async function initializeLiff(liffIdEnv: string): Promise<void> {
-  // try {
   const liffId = getEnvVariable(liffIdEnv) || 'liffId not found'
+
+  // Initialize LIFF
   await liff.init({ liffId })
   console.log('LIFF initialized')
-  if (liff.isLoggedIn()) {
-    const idtoken = (await liff.getIDToken()) || ''
-    console.log('ID Token:', idtoken)
-    const isValid = await verifyIdToken(idtoken)
-    console.log('ID Token is valid:', isValid)
-    if (isValid) {
-      login(idtoken)
-        .then((token) => {
-          const access_token = token
-          console.log('Access Token:', access_token)
 
-          getUserProfile(access_token).then((internalId) => {
-            const test_iid = internalId
-            console.log('Internal ID:', test_iid)
-          })
-        })
-        .catch((error) => {
-          if (axios.isAxiosError(error) && error.response?.status === 401) {
-            console.error(
-              'Non registered user, please agree with terms and conditions first',
-              error,
-            )
-            // liff.openWindow({ url: `https://liff.line.me/${liff_user_classification}` })
-            window.location.href = `https://liff.line.me/${liff_user_classification}`
-          } else {
-            console.error('Unexpected error:', error)
-            liff.logout()
-          }
-        })
-    } else {
-      console.log('ID Token is not valid, log in again')
-      liff.logout()
-      liff.login()
-    }
-  } else {
+  // Check if user is logged in
+  if (!liff.isLoggedIn()) {
     liff.login()
+    return
+  }
+
+  // Get ID token
+  const idToken = liff.getIDToken()
+  if (!idToken) {
+    console.error('ID Token is null')
+    liff.logout()
+    return
+  }
+  console.log('ID Token:', idToken)
+
+  // Verify ID token
+  const isValid = await verifyIdToken(idToken)
+  console.log('ID Token is valid:', isValid)
+
+  if (!isValid) {
+    console.log('ID Token is not valid, log in again')
+    liff.logout()
+    liff.login()
+    return
+  }
+
+  // Proceed with login
+  try {
+    const accessToken = await login(idToken)
+    console.log('Access Token:', accessToken)
+
+    const internalId = await getUserProfile(accessToken)
+    console.log('Internal ID:', internalId)
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      console.error('Non registered user, please agree with terms and conditions first', error)
+      window.location.href = `https://liff.line.me/${liff_user_classification}`
+    } else {
+      console.error('Unexpected error:', error)
+      liff.logout()
+    }
   }
 }
 
