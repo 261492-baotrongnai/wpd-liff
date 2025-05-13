@@ -13,6 +13,23 @@ export function getEnvVariable(key: string): string | undefined {
   return (import.meta.env as Record<string, string | undefined>)[key]
 }
 
+export function liffInitMenuInput() {
+  const liffId = getEnvVariable('VITE_LIFF_ID_MENU_INPUT') || 'liffId not found'
+  console.log('LIFF ID:', liffId)
+
+  // Initialize LIFF
+  liff.init({ liffId })
+    .then(() => {
+      console.log('LIFF initialized')
+      if (!liff.isLoggedIn()) {
+        liff.login()
+      }
+    })
+    .catch((error) => {
+      console.error('LIFF initialization failed:', error)
+    })
+}
+
 export async function initializeLiff(liffIdEnv: string): Promise<void> {
   const liffId = getEnvVariable(liffIdEnv) || 'liffId not found'
 
