@@ -1,6 +1,15 @@
 <template>
   <div class="menu-input">
-    <h2 class="header">บันทึกเมนูอาหาร</h2>
+    <div class="input-candidates">
+      <p class="instruction">กรุณาเลือกเมนูอาหารที่ต้องการบันทึก</p>
+      <div v-if="candidates.length" class="candidates-list">
+        <ul>
+          <li v-for="(candidate, index) in candidates" :key="index">
+            {{ candidate }}
+          </li>
+        </ul>
+      </div>
+    </div>
     <div class="input-container">
       <input
         type="text"
@@ -15,12 +24,14 @@
 
 <script lang="ts">
 import { liffInitMenuInput } from '@/utility/liffUtils'
+import { getMenuCandidates } from '@/utility/menuUtils'
 import liff from '@line/liff'
 export default {
   name: 'MenInput',
   data() {
     return {
       menu_name: '',
+      candidates: [],
     }
   },
 
@@ -28,12 +39,13 @@ export default {
     sendMenu() {
       if (this.menu_name.trim()) {
         console.log('Sending menu name:', this.menu_name)
-        liff.sendMessages([
-          {
-            type: 'text',
-            text: `${this.menu_name}`,
-          },
-        ])
+        liff
+          .sendMessages([
+            {
+              type: 'text',
+              text: `${this.menu_name}`,
+            },
+          ])
           .then(() => {
             console.log('Message sent successfully')
             this.menu_name = '' // Clear the input field after sending
@@ -41,7 +53,6 @@ export default {
           .catch((error) => {
             console.error('Error sending message:', error)
           })
-
       } else {
         console.error('Menu name cannot be empty')
       }
@@ -49,6 +60,14 @@ export default {
   },
   mounted() {
     liffInitMenuInput()
+    const id = new URLSearchParams(window.location.search).get('id')
+    if (!id) {
+      console.error('ID parameter is missing in the URL')
+      return
+    }
+    getMenuCandidates(id).then((candidates) => {
+      this.candidates = candidates
+    })
   },
 }
 </script>
