@@ -1,4 +1,5 @@
 // src/services/auth.service.ts
+import liff from '@line/liff'
 import axios from 'axios'
 import { ref } from 'vue'
 
@@ -137,6 +138,34 @@ export class AuthService {
     } catch (error) {
       console.error('Login failed:', error)
       return false
+    }
+  }
+
+  public async register(idToken: string, program_code?: string) {
+    try {
+      const payload: { idToken: string; program_code?: string } = { idToken }
+      if (program_code !== undefined) {
+        payload.program_code = program_code
+      }
+      console.log('Registering user with payload:', payload.idToken)
+
+      const response = await axios.post(`${API}/users/register`, payload)
+
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error(`API error: ${response.statusText}`)
+      }
+
+      const user = response.data
+      console.log('User registered successfully:', user)
+      authService.saveToken(user.access_token)
+      console.log('get access_token:', authService.getToken())
+      liff.sendMessages([{ type: 'text', text: 'ยันยันการบันทึกผู้ใช้' }])
+      return user
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 500) {
+        liff.logout()
+      }
+      console.error('Failed to register user:', error)
     }
   }
 

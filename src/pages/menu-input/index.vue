@@ -23,8 +23,8 @@
 </template>
 
 <script lang="ts">
-import { liffInitMenuInput } from '@/utility/liffUtils'
-import { getMenuCandidates } from '@/pages/menu-input/menuUtils'
+import { liffInitMenuInput } from '../../utility/liffUtils'
+import { getMenuCandidates } from '../../pages/menu-input/menuUtils'
 import liff from '@line/liff'
 export default {
   name: 'MenInput',
