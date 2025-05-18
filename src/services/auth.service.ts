@@ -124,7 +124,7 @@ export class AuthService {
    * Login user with LINE ID token and store the returned access token
    */
   public async loginWithLineIdToken(idToken: string): Promise<boolean> {
-    console.log('is production:', import.meta.env.VITE_PRODUCTION === true)
+    console.log('is production:', import.meta.env.NODE_ENV)
     console.log(API)
     try {
       const response = await axios.post(`${API}/auth/login`, { idToken })
