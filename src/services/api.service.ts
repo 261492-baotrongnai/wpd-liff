@@ -2,7 +2,7 @@ import axios from 'axios';
 import type { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { authService } from './auth.service';
 
-const API = import.meta.env.VITE_PRODUCTION ? import.meta.env.VITE_API_URL : '/api';
+const API = import.meta.env.VITE_PRODUCTION === true ? import.meta.env.VITE_API_URL : '/api';
 
 class ApiService {
   /**

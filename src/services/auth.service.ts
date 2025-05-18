@@ -2,7 +2,7 @@
 import axios from 'axios'
 import { ref } from 'vue'
 
-const API = import.meta.env.VITE_PRODUCTION ? import.meta.env.VITE_API_URL : '/api'
+const API = import.meta.env.VITE_PRODUCTION === true ? import.meta.env.VITE_API_URL : '/api'
 const TOKEN_KEY = 'auth_token'
 const TOKEN_EXPIRY_KEY = 'auth_token_expiry'
 const liff_user_classification = import.meta.env.VITE_LIFF_ID_USER_CLASSIFICATION
@@ -125,6 +125,7 @@ export class AuthService {
    */
   public async loginWithLineIdToken(idToken: string): Promise<boolean> {
     console.log(API)
+    console.log('is production:', import.meta.env.VITE_PRODUCTION)
     try {
       const response = await axios.post(`${API}/auth/login`, { idToken })
       const accessToken = response.data.access_token
