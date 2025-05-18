@@ -2,7 +2,7 @@ import liff from '@line/liff'
 import axios from 'axios'
 import { authService } from './auth.service'
 
-const API = import.meta.env.NODE_ENV === 'production' ? import.meta.env.VITE_API_URL : '/api'
+const API = process.env.NODE_ENV === 'production' ? import.meta.env.VITE_API_URL : '/api'
 const liff_user_classification = import.meta.env.VITE_LIFF_ID_USER_CLASSIFICATION
 
 /**
