@@ -37,7 +37,7 @@
 </template>
 
 <script lang="ts">
-import { register } from '@/utility/liffUtils'
+import { register } from '../../services/liff.service'
 import liff from '@line/liff'
 export default {
   name: 'TestTerm',
@@ -53,15 +53,15 @@ export default {
     }
   },
   methods: {
-    testSuccess() {
+    async testSuccess() {
       console.log('Test success with code:', this.code)
       const idToken = liff.getIDToken()
       if (idToken) {
-        register(idToken, this.code)
+        await register(idToken, this.code)
+        liff.closeWindow()
       } else {
         console.error('ID Token is null')
       }
-      liff.closeWindow()
     },
   },
 }

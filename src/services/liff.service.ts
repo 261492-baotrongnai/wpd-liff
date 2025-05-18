@@ -1,36 +1,20 @@
 import liff from '@line/liff'
 import axios from 'axios'
+import { authService } from './auth.service'
 
 const API = import.meta.env.VITE_PRODUCTION ? import.meta.env.VITE_API_URL : '/api'
 const liff_user_classification = import.meta.env.VITE_LIFF_ID_USER_CLASSIFICATION
 
 /**
  * Retrieves the value of an environment variable from import.meta.env.
- * @param key - The key of the environment variable (e.g., 'VITE_LIFF_ID').
- * @returns The value of the environment variable or undefined if not found.
  */
 export function getEnvVariable(key: string): string | undefined {
   return (import.meta.env as Record<string, string | undefined>)[key]
 }
 
-export function liffInitMenuInput() {
-  const liffId = getEnvVariable('VITE_LIFF_ID_MENU_INPUT') || 'liffId not found'
-  console.log('LIFF ID:', liffId)
-
-  // Initialize LIFF
-  liff
-    .init({ liffId })
-    .then(() => {
-      console.log('LIFF initialized')
-      if (!liff.isLoggedIn()) {
-        liff.login()
-      }
-    })
-    .catch((error) => {
-      console.error('LIFF initialization failed:', error)
-    })
-}
-
+/**
+ * Initialize LIFF and handle login with proper authentication
+ */
 export async function initializeLiff(liffIdEnv: string): Promise<void> {
   const liffId = getEnvVariable(liffIdEnv) || 'liffId not found'
 
@@ -38,75 +22,51 @@ export async function initializeLiff(liffIdEnv: string): Promise<void> {
   await liff.init({ liffId })
   console.log('LIFF initialized')
 
-  // Check if user is logged in
+  // Check if user is logged in to LIFF
   if (!liff.isLoggedIn()) {
     liff.login()
     return
   }
 
-  // Get ID token
+  // Get ID token from LIFF
   const idToken = liff.getIDToken()
   if (!idToken) {
     console.error('ID Token is null')
     liff.logout()
-    window.location.reload()
     return
   }
-  console.log('ID Token:', idToken)
 
   // Verify ID token
   const isValid = await verifyIdToken(idToken)
-  console.log('ID Token is valid:', isValid)
-
   if (!isValid) {
-    console.log('ID Token is not valid, log in again')
+    console.log('ID Token is not valid, logging in again')
     liff.logout()
     liff.login()
     return
   }
 
-  // Proceed with login
+  // Attempt to login with the backend using the ID token
   try {
-    const accessToken = await login(idToken)
-    return accessToken
-    // const internalId = await getUserProfile(accessToken)
-    // console.log('Internal ID:', internalId)
+    const loginSuccess = await authService.loginWithLineIdToken(idToken)
+    if (!loginSuccess) {
+      throw new Error('Login failed')
+    }
+
+    // Login successful, you can redirect to app main page if needed
+    console.log('Login successful')
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 401) {
-      console.error('Non registered user, please agree with terms and conditions first', error)
+      console.error('Non registered user, please agree with terms and conditions first')
       window.location.href = `https://liff.line.me/${liff_user_classification}`
     } else {
       console.error('Unexpected error:', error)
       liff.logout()
-      window.location.reload()
+      authService.logout()
     }
   }
 }
 
-export async function login(idToken: string) {
-  console.log('Logging in user with ID token')
-  const response = await axios.post(`${API}/auth/login`, { idToken })
-
-  const acct = response.data.access_token
-  // console.log('User logged in successfully:', '\n access_token:', acct)
-  console.log('User logged in successfully')
-  return acct
-}
-
-export async function verifyIdToken(id_token: string) {
-  console.log('Verifying ID token:', id_token)
-  const response = await axios.post(`${API}/users/verify`, {
-    idToken: id_token, // Match the backend's expected key
-  })
-  console.log('ID token verified successfully:', response.data)
-  if (response.status < 200 || response.status >= 300) {
-    return false
-  }
-  const result = response.data
-  return result
-}
-
-export async function initUserClassificationliff() {
+export async function liffInitUserClassification(): Promise<void> {
   await liff
     .init({
       liffId: liff_user_classification,
@@ -127,6 +87,27 @@ export async function initUserClassificationliff() {
     })
 }
 
+/**
+ * Verify ID token with the backend
+ */
+export async function verifyIdToken(idToken: string): Promise<boolean> {
+  try {
+    const exp = liff.getDecodedIDToken()?.exp
+    console.log('exp:', exp)
+    console.log('Current time:', Date.now())
+    if (exp && Date.now() / 1000 < parseInt(exp.toString())) {
+      // const response = await axios.post(`${API}/users/verify`, {
+      //   idToken: idToken,
+      // })
+      // if (!(response.status >= 200 && response.status < 300)) throw new Error(response.statusText)
+      return true
+    } else throw new Error('ID token is expired')
+  } catch (error) {
+    console.error('Error verifying ID token:', error)
+    return false
+  }
+}
+
 export async function register(idToken: string, program_code?: string) {
   try {
     const payload: { idToken: string; program_code?: string } = { idToken }
@@ -143,31 +124,22 @@ export async function register(idToken: string, program_code?: string) {
 
     const user = response.data
     console.log('User registered successfully:', user)
+    authService.saveToken(user.access_token)
+    console.log('get access_token:', authService.getToken())
+    liff.sendMessages([{ type: 'text', text: 'ยันยันการบันทึกผู้ใช้' }])
     return user
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 500) {
-      logout()
+      liff.logout()
     }
     console.error('Failed to register user:', error)
   }
 }
 
-export function logout() {
-  liff.logout() // Log out the user
-  // window.location.reload() // Reload the page to reset the app state
-}
-
-export async function getUserProfile(acct: string) {
-  console.log('Getting user profile with access token: ', acct)
-  try {
-    const response = await axios.get(`${API}/users/profile`, {
-      headers: {
-        Authorization: `Bearer ${acct}`,
-      },
-    })
-    console.log('getUserProfile.data: ', response.data)
-    return response.data.internalId
-  } catch (error) {
-    console.error('Failed to get user profile:', error)
-  }
+/**
+ * Logout from both LIFF and the application
+ */
+export function logout(): void {
+  liff.logout() // Log out from LIFF
+  authService.logout() // Log out from our app
 }

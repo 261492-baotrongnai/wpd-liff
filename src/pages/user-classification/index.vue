@@ -38,7 +38,7 @@
 </template>
 
 <script lang="ts">
-import { initUserClassificationliff } from '../../utility/liffUtils'
+import { liffInitUserClassification } from '../../services/liff.service'
 // import liff from '@line/liff'
 import PopupEnterCode from './PopupEnterCode.vue'
 import CommonTerm from './CommonTerm.vue'
@@ -69,7 +69,7 @@ export default {
     },
   },
   mounted() {
-    initUserClassificationliff()
+    liffInitUserClassification()
   },
 }
 </script>

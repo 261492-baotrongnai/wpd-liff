@@ -12,7 +12,7 @@
 </template>
 
 <script lang="ts">
-import { initializeLiff } from '../../utility/liffUtils'
+import { initializeLiff } from '../../services/liff.service'
 import liff from '@line/liff'
 import ProgressNav from './ProgressNav.vue'
 import ProgressGrade from './ProgressGrade.vue'
@@ -38,11 +38,7 @@ export default {
     },
   },
   mounted() {
-    initializeLiff('VITE_LIFF_ID_PROGRESS').then(() => {
-      liff.getProfile().then((profile) => {
-        console.log('Profile:', profile)
-      })
-    })
+    initializeLiff('VITE_LIFF_ID_PROGRESS')
   },
 }
 </script>
