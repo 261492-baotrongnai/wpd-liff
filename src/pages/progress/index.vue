@@ -8,15 +8,17 @@
 
     <USeparator orientation="horizontal" size="xs" color="black" />
     <ProgressSection />
+    <div v-if="meals">{{ meals }}</div>
   </div>
 </template>
 
 <script lang="ts">
 import { initializeLiff } from '../../services/liff.service'
-import liff from '@line/liff'
 import ProgressNav from './ProgressNav.vue'
 import ProgressGrade from './ProgressGrade.vue'
 import ProgressSection from './ProgressSection.vue'
+import { getAllProgress, getTodayProgress } from './progress.service'
+import type { Meal } from '../types/meal.types'
 
 export default {
   name: 'ProgressPage',
@@ -30,6 +32,7 @@ export default {
     return {
       grade: '',
       period: 'วันนี้',
+      meals: null as Meal[] | null | undefined,
     }
   },
   methods: {
@@ -37,8 +40,9 @@ export default {
       this.period = newPeriod
     },
   },
-  mounted() {
-    initializeLiff('VITE_LIFF_ID_PROGRESS')
+  async mounted() {
+    await initializeLiff('VITE_LIFF_ID_PROGRESS')
+    this.meals = await getTodayProgress()
   },
 }
 </script>

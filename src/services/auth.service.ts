@@ -57,8 +57,9 @@ export class AuthService {
         if (axios.isAxiosError(error) && error.response?.status === 401) {
           console.log('Unauthorized request, logging out')
           this.logout()
+          // window.location.reload()
           // Redirect to login page or show login modal
-          window.location.href = `https://liff.line.me/${liff_user_classification}` // Modify as needed for your application
+          // window.location.href = `https://liff.line.me/${liff_user_classification}` // Modify as needed for your application
         }
         return Promise.reject(error)
       },
@@ -137,6 +138,10 @@ export class AuthService {
       return true
     } catch (error) {
       console.error('Login failed:', error)
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        console.error('Non registered user, please agree with terms and conditions first')
+        window.location.href = `https://liff.line.me/${liff_user_classification}`
+      }
       return false
     }
   }
