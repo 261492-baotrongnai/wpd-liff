@@ -53,8 +53,10 @@ export default {
       const idToken = liff.getIDToken()
       console.log('Common success with ID token:', idToken)
       if (idToken) {
-        await register(idToken)
-        await liff.sendMessages([{ type: 'text', text: 'ยันยันการบันทึกผู้ใช้' }])
+        const response = await register(idToken)
+        if (response.type === 'NewUser')
+          await liff.sendMessages([{ type: 'text', text: 'ยันยันการบันทึกผู้ใช้' }])
+
         liff.closeWindow()
       } else {
         console.error('ID token is null')
