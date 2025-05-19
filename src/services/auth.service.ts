@@ -159,7 +159,7 @@ export class AuthService {
       console.log('User registered successfully:', user)
       authService.saveToken(user.access_token)
       console.log('get access_token:', authService.getToken())
-      liff.sendMessages([{ type: 'text', text: 'ยันยันการบันทึกผู้ใช้' }])
+
       return user
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 500) {

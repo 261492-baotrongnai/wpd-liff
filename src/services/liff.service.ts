@@ -109,7 +109,7 @@ export async function verifyIdToken(idToken: string): Promise<boolean> {
 }
 
 export async function register(idToken: string, program_code?: string) {
-  authService.register(idToken, program_code)
+  return authService.register(idToken, program_code)
 }
 
 /**
