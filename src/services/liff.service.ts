@@ -37,7 +37,7 @@ export async function initializeLiff(liffIdEnv: string): Promise<void> {
   }
 
   // Verify ID token
-  const isValid = await verifyIdToken(idToken)
+  const isValid = await verifyIdToken()
   if (!isValid) {
     console.log('ID Token is not valid, logging in again')
     liff.logout()
@@ -77,7 +77,7 @@ export async function liffInitUserClassification(): Promise<void> {
       }
       const idtoken = await liff.getIDToken()
       if (!idtoken) throw new Error('ID token not found')
-      const isValid = await verifyIdToken(idtoken)
+      const isValid = await verifyIdToken()
       console.log('ID Token is valid:', isValid)
       if (!isValid) {
         console.log('ID Token is not valid, log in again')
@@ -90,7 +90,7 @@ export async function liffInitUserClassification(): Promise<void> {
 /**
  * Verify ID token with the backend
  */
-export async function verifyIdToken(idToken: string): Promise<boolean> {
+export async function verifyIdToken(): Promise<boolean> {
   try {
     const exp = liff.getDecodedIDToken()?.exp
     console.log('exp:', exp)
