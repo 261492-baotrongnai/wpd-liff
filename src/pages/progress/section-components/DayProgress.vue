@@ -30,8 +30,12 @@
 
   <div v-if="meals" class="progress-days">
     <div v-for="meal in meals" :key="meal.id" class="meal-item">
-      <p>{{ meal.id }}</p>
-      <p v-for="food in meal.foods" :key="food.id" class="food-item">{{ food.name }}</p>
+      <div class="fixed-image" :style="{ backgroundImage: `url(${meal.signedUrl})` }"></div>
+      <div class="flex flex-col">
+        <p>{{ mealTypeTranslations[meal.mealType] }}</p>
+        <p>{{ meal.foodNames }}</p>
+        <p>{{ meal.avgGrade }}</p>
+      </div>
     </div>
   </div>
 </template>
@@ -41,6 +45,14 @@ import { onMounted, shallowRef } from 'vue'
 import type { Meal } from '../../types/meal.types'
 import { getTodayProgress, getDayProgress } from '../progress.service'
 import { CalendarDate, DateFormatter, getLocalTimeZone } from '@internationalized/date'
+
+// Thai translations for meal types
+const mealTypeTranslations: Record<string, string> = {
+  breakfast: 'มื้อเช้า',
+  lunch: 'มื้อกลางวัน',
+  dinner: 'มื้อเย็น',
+  snack: 'ของว่าง',
+}
 
 const meals = shallowRef<Meal[] | null | undefined>(null)
 const df = new DateFormatter('th-TH', { dateStyle: 'medium' })
@@ -75,15 +87,27 @@ async function onModelValueUpdate(newValue: CalendarDate | null | undefined) {
 </script>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
-export default defineComponent({
+export default {
   name: 'DayProgress',
-})
+}
 </script>
 
 <style scoped>
 .date-container {
   display: flex;
   justify-content: center;
+}
+.meal-item {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  margin: 10px;
+}
+.fixed-image {
+  width: 100px;
+  height: 100px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 10%;
 }
 </style>

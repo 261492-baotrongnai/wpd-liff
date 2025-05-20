@@ -1,17 +1,22 @@
+import type { User } from './user.types'
+
 export interface Meal {
   id: number
   mealType: string
-  inageName: string
+  imageName: string
+  signedUrl: string
   avgGrade: string
   avgScore: number
   foods: Food[]
+  user: User
   createdAt: string
   updatedAt: string
+  foodNames: string
 }
 
 export interface Food {
-  id: number,
-  name: string,
-  description: string,
-  grade: string,
+  id: number
+  name: string
+  description: string
+  grade: string
 }
