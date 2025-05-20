@@ -57,13 +57,13 @@ export class AuthService {
         if (axios.isAxiosError(error) && error.response?.status === 401) {
           console.log('Unauthorized request, logging out')
           this.logout()
-          const idToken = liff.getIDToken()
-          if (idToken) {
-            this.loginWithLineIdToken(idToken)
-          } else {
-            console.error('ID Token is null, cannot log in')
-          }
-          // window.location.reload()
+          // const idToken = liff.getIDToken()
+          // if (idToken) {
+          //   this.loginWithLineIdToken(idToken)
+          // } else {
+          //   console.error('ID Token is null, cannot log in')
+          // }
+          window.location.reload()
           // Redirect to login page or show login modal
           // window.location.href = `https://liff.line.me/${liff_user_classification}` // Modify as needed for your application
         }
