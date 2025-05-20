@@ -1,11 +1,11 @@
 <template>
-  <h2 class="header">บันทึกอาหารย้อนหลัง</h2>
-  <ProgressDays />
+  <div class="progress-section">
+    <h1 class="header-content">บันทึกอาหารย้อนหลัง</h1>
+    <ProgressDays />
+  </div>
 </template>
 
 <script lang="ts">
-import type { Meal } from '../types/meal.types'
-import { getTodayProgress } from './progress.service'
 import ProgressDays from './ProgressDays.vue'
 
 export default {
@@ -13,21 +13,18 @@ export default {
   components: {
     ProgressDays,
   },
-  data() {
-    return {
-      meals: null as Meal[] | null | undefined,
-    }
-  },
-  methods: {},
-  async mounted() {
-    this.meals = await getTodayProgress()
-  },
 }
 </script>
 
 <style scoped>
-.header {
+.header-content {
+  font-size: 16px;
   font-weight: 600;
   align-self: center;
+}
+.progress-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 </style>

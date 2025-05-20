@@ -15,6 +15,7 @@ export default defineConfig(({}) => {
       vueDevTools(),
       VueRouter({}),
       ui({
+        colorMode: false,
         ui: {
           separator: {
             // varients: {

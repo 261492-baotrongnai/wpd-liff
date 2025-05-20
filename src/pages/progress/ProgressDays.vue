@@ -1,12 +1,33 @@
 <template>
-  <form>
-    <input
-      v-model="selectedDate"
-      type="date"
-      class="date-input"
-      @change="updateSelectedDate($event.target.value)"
-    />
-  </form>
+  <UModal
+    :close="{
+      color: 'error',
+      variant: 'outline',
+      class: 'rounded-full',
+    }"
+  >
+    <div class="date-container">
+      <UButton
+        color="neutral"
+        variant="subtle"
+        icon="i-lucide-calendar"
+        class="w-fit justify-center"
+      >
+        {{ modelValue ? df.format(modelValue.toDate(getLocalTimeZone())) : 'Select a date' }}
+      </UButton>
+    </div>
+
+    <template #body>
+      <UCalendar
+        v-model="modelValue"
+        class="p-2"
+        size="xl"
+        v-on:update:model-value="handleModelValueUpdate"
+        locale="th"
+      />
+    </template>
+  </UModal>
+
   <div v-if="meals" class="progress-days">
     <div v-for="meal in meals" :key="meal.id" class="meal-item">
       <p>{{ meal.id }}</p>
@@ -14,41 +35,55 @@
     </div>
   </div>
 </template>
-<script lang="ts">
+
+<script setup lang="ts">
+import { onMounted, shallowRef } from 'vue'
 import type { Meal } from '../types/meal.types'
 import { getTodayProgress, getDayProgress } from './progress.service'
+import { CalendarDate, DateFormatter, getLocalTimeZone } from '@internationalized/date'
 
-export default {
-  name: 'ProgressDays',
+const meals = shallowRef<Meal[] | null | undefined>(null)
+const df = new DateFormatter('th-TH', { dateStyle: 'medium' })
+const modelValue = shallowRef(
+  new CalendarDate(new Date().getFullYear(), new Date().getMonth() + 1, new Date().getDate()),
+)
+// เปิดมาให้โหลดเอาของวันนี้มาโชว์ก่อน
+onMounted(async () => {
+  meals.value = await getTodayProgress()
+})
 
-  data() {
-    return {
-      meals: null as Meal[] | null | undefined,
-      selectedDate: new Date().toISOString().split('T')[0], // Set default date to today
-    }
-  },
-  methods: {
-    updateSelectedDate(date: string) {
-      console.log('Selected date:', date)
-      this.selectedDate = date
-      console.log('Selected date iso format :', this.selectedDate)
-      this.fetchMeals()
-    },
-    async fetchMeals() {
-      this.meals = await getDayProgress(this.selectedDate)
-    },
-  },
-  async mounted() {
-    this.meals = await getTodayProgress()
-  },
+function handleModelValueUpdate(value: unknown) {
+  onModelValueUpdate(value as CalendarDate)
+}
+
+// เลือกดูวันอื่น
+async function onModelValueUpdate(newValue: CalendarDate | null | undefined) {
+  if (!newValue || !(newValue instanceof CalendarDate)) {
+    console.warn('Unsupported type received:', newValue)
+    return
+  }
+  if (newValue instanceof CalendarDate) {
+    console.log('Model value updated:', newValue.month)
+    const date = new Date(newValue.year, newValue.month - 1, newValue.day + 1)
+    console.log('Selected date:', date.toISOString())
+    meals.value = await getDayProgress(date.toISOString().split('T')[0])
+    // modal should close after selecting a date
+  } else {
+    console.warn('Unsupported type received:', newValue)
+  }
 }
 </script>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+export default defineComponent({
+  name: 'ProgressDays',
+})
+</script>
+
 <style scoped>
-.date-input {
-  width: 100%;
-  padding: 10px;
-  border-radius: 5px;
-  border: 1px solid #505050;
-  color: black;
+.date-container {
+  display: flex;
+  justify-content: center;
 }
 </style>
