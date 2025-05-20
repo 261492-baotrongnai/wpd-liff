@@ -63,7 +63,7 @@ export class AuthService {
           // } else {
           //   console.error('ID Token is null, cannot log in')
           // }
-          window.location.reload()
+          // window.location.reload()
           // Redirect to login page or show login modal
           // window.location.href = `https://liff.line.me/${liff_user_classification}` // Modify as needed for your application
         }
