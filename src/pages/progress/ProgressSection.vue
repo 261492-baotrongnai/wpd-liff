@@ -4,12 +4,23 @@
 </template>
 
 <script lang="ts">
+import type { Meal } from '../types/meal.types'
+import { getTodayProgress } from './progress.service'
 import ProgressDays from './ProgressDays.vue'
 
 export default {
   name: 'ProgressSection',
   components: {
     ProgressDays,
+  },
+  data() {
+    return {
+      meals: null as Meal[] | null | undefined,
+    }
+  },
+  methods: {},
+  async mounted() {
+    this.meals = await getTodayProgress()
   },
 }
 </script>

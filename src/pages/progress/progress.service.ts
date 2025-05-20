@@ -20,3 +20,15 @@ export async function getTodayProgress(): Promise<Meal[] | undefined> {
     console.error('Error fetching today progress:', error)
   }
 }
+
+export async function getDayProgress(date: string): Promise<Meal[] | undefined> {
+  try {
+    const response = await apiService.get<Meal[]>(`/meals/day`, {
+      params: { date },
+    })
+    console.log('Day progress:', response)
+    return response
+  } catch (error) {
+    console.error('Error fetching day progress:', error)
+  }
+}

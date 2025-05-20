@@ -8,7 +8,6 @@
 
     <USeparator orientation="horizontal" size="xs" color="black" />
     <ProgressSection />
-    <div v-if="meals">{{ meals }}</div>
   </div>
 </template>
 
@@ -17,7 +16,6 @@ import { initializeLiff } from '../../services/liff.service'
 import ProgressNav from './ProgressNav.vue'
 import ProgressGrade from './ProgressGrade.vue'
 import ProgressSection from './ProgressSection.vue'
-import { getAllProgress, getTodayProgress } from './progress.service'
 import type { Meal } from '../types/meal.types'
 
 export default {
@@ -42,7 +40,6 @@ export default {
   },
   async mounted() {
     await initializeLiff('VITE_LIFF_ID_PROGRESS')
-    this.meals = await getTodayProgress()
   },
 }
 </script>
