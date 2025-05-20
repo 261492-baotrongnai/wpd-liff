@@ -77,7 +77,7 @@ async function onModelValueUpdate(newValue: CalendarDate | null | undefined) {
 <script lang="ts">
 import { defineComponent } from 'vue'
 export default defineComponent({
-  name: 'ProgressDays',
+  name: 'DayProgress',
 })
 </script>
 

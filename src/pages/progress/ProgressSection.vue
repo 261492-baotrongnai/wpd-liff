@@ -1,17 +1,23 @@
 <template>
   <div class="progress-section">
     <h1 class="header-content">บันทึกอาหารย้อนหลัง</h1>
-    <ProgressDays />
+    <DayProgress />
   </div>
 </template>
 
 <script lang="ts">
-import ProgressDays from './ProgressDays.vue'
+import DayProgress from './DayProgress.vue';
 
 export default {
   name: 'ProgressSection',
   components: {
-    ProgressDays,
+    DayProgress,
+  },
+  props: {
+    selectedPeriod: {
+      type: String,
+      required: true,
+    },
   },
 }
 </script>

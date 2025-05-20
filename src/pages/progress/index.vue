@@ -4,10 +4,10 @@
     <div class="flex flex-col">
       <ProgressGrade :grade="grade" :period="period" />
       <button class="share-button">แชร์ให้คนอื่นดู</button>
+      <div class="section-separator"></div>
     </div>
 
-    <USeparator orientation="horizontal" size="xs" color="black" />
-    <ProgressSection />
+    <ProgressSection :selectedPeriod="period" />
   </div>
 </template>
 
@@ -57,7 +57,8 @@ export default {
   color: rgb(47, 47, 47);
   padding: auto;
   margin: auto;
-  margin-top: 8px;
+  margin-top: 10px;
+  margin-bottom: 10px;
 
   text-align: center;
   justify-content: center;
@@ -65,5 +66,11 @@ export default {
   cursor: pointer;
   width: 100px;
   height: 30px;
+}
+
+.section-separator {
+  width: 100%;
+  height: 1px;
+  background-color: #bbbbbb;
 }
 </style>

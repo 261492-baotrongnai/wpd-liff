@@ -17,22 +17,14 @@ export default defineConfig(({}) => {
       ui({
         colorMode: false,
         ui: {
+          colors: {},
           separator: {
-            // varients: {
-            //   color: {
-            //     neutral: {
-            //       backgroundColor: 'black',
-            //     },
-            //   },
-            // },
             compoundVariants: [
               {
                 orientation: 'horizontal',
                 size: 'xs',
-                color: 'black',
                 class: {
-                  border: 'border-t-[0.4px]',
-                  borderColor: 'black',
+                  border: 'border-t-[0.1px]',
                 },
               },
               {
@@ -104,7 +96,13 @@ export default defineConfig(({}) => {
               size: 'xs',
               type: 'solid',
             },
+            color: {
+              neutral: 'black',
+            },
           },
+        },
+        theme: {
+          colors: ['neutral', 'primary', 'secondary', 'info', 'success', 'warning', 'error'],
         },
       }),
       tailwindcss(),
