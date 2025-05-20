@@ -2,7 +2,7 @@
   <div class="grade-box">
     <div class="grade-section">
       <p>เกรดเฉลี่ย</p>
-      <p>{{ period }}</p>
+      <p>{{ selectedPeriod }}</p>
     </div>
 
     <div class="grade-section">
@@ -26,6 +26,21 @@ export default {
     period: {
       type: String,
       required: true,
+    },
+  },
+  computed: {
+    selectedPeriod() {
+      switch (this.period) {
+        case 'Days':
+          return 'ของวัน'
+        case 'Weeks':
+          return 'ของสัปดาห์'
+        case 'Months':
+          return 'ของเดือน'
+        default:
+          console.error('Invalid period:', this.period)
+          return ''
+      }
     },
   },
 }

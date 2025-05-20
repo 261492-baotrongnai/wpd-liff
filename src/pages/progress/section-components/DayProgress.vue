@@ -38,8 +38,8 @@
 
 <script setup lang="ts">
 import { onMounted, shallowRef } from 'vue'
-import type { Meal } from '../types/meal.types'
-import { getTodayProgress, getDayProgress } from './progress.service'
+import type { Meal } from '../../types/meal.types'
+import { getTodayProgress, getDayProgress } from '../progress.service'
 import { CalendarDate, DateFormatter, getLocalTimeZone } from '@internationalized/date'
 
 const meals = shallowRef<Meal[] | null | undefined>(null)

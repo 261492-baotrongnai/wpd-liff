@@ -34,19 +34,7 @@ export default {
   methods: {
     setActivePeriod(period: string) {
       this.activePeriod = period
-      switch (period) {
-        case 'Days':
-          this.setPeriod('วันนี้')
-          break
-        case 'Weeks':
-          this.setPeriod('สัปดาห์นี้')
-          break
-        case 'Months':
-          this.setPeriod('เดือนนี้')
-          break
-        default:
-          console.error('Invalid period:', period)
-      }
+      this.setPeriod(period)
     },
     setPeriod(period: string) {
       this.$emit('updatePeriod', period)

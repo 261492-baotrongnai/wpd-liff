@@ -29,7 +29,7 @@ export default {
   data() {
     return {
       grade: '',
-      period: 'วันนี้',
+      period: 'Days',
       meals: null as Meal[] | null | undefined,
     }
   },
