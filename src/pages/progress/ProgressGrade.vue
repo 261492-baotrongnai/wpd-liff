@@ -6,7 +6,7 @@
     </div>
 
     <div class="grade-section">
-      <p>{{ grade ? grade : 'A' }}</p>
+      <p>{{ grade }}</p>
     </div>
 
     <div class="grade-section">

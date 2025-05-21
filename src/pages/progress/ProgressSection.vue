@@ -1,9 +1,9 @@
 <template>
   <div class="progress-section">
     <h1 class="header-content">บันทึกอาหารย้อนหลัง</h1>
-    <DayProgress v-if="selectedPeriod === 'Days'" />
-    <WeekProgress v-if="selectedPeriod === 'Weeks'" />
-    <MonthProgress v-if="selectedPeriod === 'Months'" />
+    <DayProgress v-if="selectedPeriod === 'Days'" @updateGrade="emitGradeUpdate" />
+    <WeekProgress v-if="selectedPeriod === 'Weeks'" @updateGrade="emitGradeUpdate" />
+    <MonthProgress v-if="selectedPeriod === 'Months'" @updateGrade="emitGradeUpdate" />
   </div>
 </template>
 
@@ -27,6 +27,12 @@ export default {
   },
   data() {
     return {}
+  },
+  methods: {
+    emitGradeUpdate(newGrade: string) {
+      // Emit the grade update event to the parent
+      this.$emit('updateGrade', newGrade)
+    },
   },
   mounted() {
     console.log('ProgressSection mounted', this.selectedPeriod)

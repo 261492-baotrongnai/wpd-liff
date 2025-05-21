@@ -20,3 +20,13 @@ export interface Food {
   description: string
   grade: string
 }
+
+export interface MealStats {
+  avgScore: number
+  avgGrade: string
+  totalMeal: number
+  countA: number
+  countB: number
+  countC: number
+  totalFood: number
+}

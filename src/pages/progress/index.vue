@@ -7,7 +7,7 @@
       <div class="section-separator"></div>
     </div>
 
-    <ProgressSection :selectedPeriod="period" />
+    <ProgressSection :selectedPeriod="period" @updateGrade="updateGrade" />
   </div>
   <div v-else class="flex flex-col gap-4 w-full items-center justify-center">
     <USkeleton class="h-[62px] w-[433px] rounded-lg" />
@@ -48,6 +48,9 @@ export default {
   methods: {
     updatePeriod(newPeriod: string) {
       this.period = newPeriod
+    },
+    updateGrade(newGrade: string) {
+      this.grade = newGrade
     },
   },
   async mounted() {
