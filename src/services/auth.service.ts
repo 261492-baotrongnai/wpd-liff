@@ -57,6 +57,8 @@ export class AuthService {
         if (axios.isAxiosError(error) && error.response?.status === 401) {
           console.log('Unauthorized request, logging out')
           this.logout()
+          liff.logout()
+          liff.login()
           // const idToken = liff.getIDToken()
           // if (idToken) {
           //   this.loginWithLineIdToken(idToken)
