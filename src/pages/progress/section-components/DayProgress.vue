@@ -95,32 +95,32 @@ function getColorByDate(date: Date) {
     modelValue.value.month - 1,
     modelValue.value.day + 1,
   )
-  const todayString = new Date().toISOString().split('T')[0]
+  const todayString = new Date().toLocaleDateString('en-CA', { timeZone: getLocalTimeZone() })
   const currentSelectedString = currentSelected.toISOString().split('T')[0]
 
-  let color = ''
 
   if (dateString === currentSelectedString) return undefined
   if (dateExists.value) {
     const foundDate = dateExists.value.find((item) => item.date === dateString)
     switch (foundDate?.grade) {
       case 'A':
-        color = '#90CAF9'
-        break
+        if (dateString === todayString) return `outline-1 outline-[#90caf9]`
+        else return 'bg-[#90caf9]/50'
+
       case 'B':
-        color = '#FFD180'
-        break
+        if (dateString === todayString) return `outline-1 outline-[#ffd180]`
+        else return 'bg-[#ffd180]/50'
+
       case 'C':
-        color = '#EF9A9A'
-        break
+        color = '#ef9a9a'
+        if (dateString === todayString) return `outline-1 outline-[#ef9a9a]`
+        else return 'bg-[#ef9a9a]/50'
+
       default:
         break
     }
   }
-  if (dateString === todayString) color = `outline-1 outline-[${color}]`
-  else color = `bg-[${color}]`
-
-  return color
+  return undefined
 }
 
 function handleModelValueUpdate(value: unknown) {
