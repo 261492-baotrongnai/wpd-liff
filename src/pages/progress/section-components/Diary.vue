@@ -6,7 +6,7 @@
     @updateGrade="updateGrade"
   />
 
-  <div v-if="day && !loading" class="px-2">
+  <div v-if="day" class="px-2">
     <p>
       {{
         modelValue
@@ -18,22 +18,16 @@
       }}
     </p>
     <div v-for="meal in day.meals" :key="meal.id" class="meal-item">
-      <div class="fixed-image" :style="{ backgroundImage: `url(${meal.signedUrl})` }"></div>
+      <div
+        v-if="!loading"
+        class="fixed-image"
+        :style="{ backgroundImage: `url(${meal.signedUrl})` }"
+      ></div>
+      <USkeleton v-else class="w-[100px] h-[100px]" />
       <div class="flex flex-col">
         <p>{{ mealTypeTranslations[meal.mealType] }}</p>
         <p>{{ meal.foodNames }}</p>
         <p>{{ meal.avgGrade }}</p>
-      </div>
-    </div>
-  </div>
-
-  <div v-else class="flex flex-col gap-2">
-    <USkeleton class="w-[170px] h-[25px]" />
-    <div class="p-2 flex flex-row mt-2 gap-2">
-      <USkeleton class="w-[100px] h-[100px]" />
-      <div class="flex flex-col gap-2 ml-2">
-        <USkeleton class="w-[200px] h-[25px]" />
-        <USkeleton class="w-[100px] h-[25px]" />
       </div>
     </div>
   </div>
