@@ -112,7 +112,6 @@ function getColorByDate(date: Date) {
         else return 'bg-[#ffd180]/50'
 
       case 'C':
-        color = '#ef9a9a'
         if (dateString === todayString) return `outline-1 outline-[#ef9a9a]`
         else return 'bg-[#ef9a9a]/50'
 
