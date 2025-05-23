@@ -265,7 +265,8 @@ export default {
   cursor: pointer;
   font-size: 16px;
   margin-inline: 10%;
-  height: 40px;
+  margin-top: 30px;
+  height: 50px;
   text-align: center;
   transition: background-color 0.2s ease;
 }
