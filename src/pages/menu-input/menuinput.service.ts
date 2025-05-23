@@ -5,7 +5,7 @@ export interface MenuCandidate {
 
 export async function getMenuCandidates(): Promise<string[]> {
   const response = await apiService.get<MenuCandidate[]>(
-    `${import.meta.env.VITE_API_URL}/user-states/candidates`,
+    `/user-states/candidates`,
   )
   const names = response.map((candidate: MenuCandidate) => candidate.name.join(', '))
   return names
