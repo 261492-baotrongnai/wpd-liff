@@ -56,7 +56,7 @@ export default {
 }
 
 .nav-button.active {
-  background-color: #c3c3c3; /* Highlight active button */
+  background-color: #e1e1e1d7; /* Highlight active button */
   color: rgb(64, 64, 64);
 }
 </style>
