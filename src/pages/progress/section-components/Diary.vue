@@ -19,7 +19,7 @@
     </p>
     <div v-for="meal in day.meals" :key="meal.id" class="meal-item">
       <div
-        v-if="!loading"
+        v-if="imageLoaded[meal.id]"
         class="fixed-image"
         :style="{ backgroundImage: `url(${meal.signedUrl})` }"
       ></div>
@@ -55,7 +55,6 @@ const mealTypeTranslations: Record<string, string> = {
   snack: 'ของว่าง',
 }
 
-const loading = shallowRef(false)
 const day = shallowRef<{ meals: Meal[]; stats: MealStats } | null | undefined>(null)
 const dateExists = shallowRef<{ date: string; grade: string }[] | undefined>(undefined)
 const df = new DateFormatter('th-TH', { dateStyle: 'full' })
@@ -69,7 +68,6 @@ const modelValue = shallowRef(
 )
 
 onMounted(async () => {
-  loading.value = true
   dateExists.value = await getAllProgress()
   day.value = await getTodayMealsAndStats()
   if (day.value && day.value.stats) {
@@ -89,32 +87,22 @@ function updateGrade(newGrade: string) {
 async function handleImagesLoaded() {
   await nextTick()
 
-  if (!day.value?.meals?.length) {
-    loading.value = false
-    return
+  if (!day.value?.meals?.length) return
+
+  for (const meal of day.value.meals) {
+    imageLoaded[meal.id] = false
+    const img = new Image()
+    img.src = meal.signedUrl
+    img.onload = () => {
+      imageLoaded[meal.id] = true
+    }
+    img.onerror = () => {
+      imageLoaded[meal.id] = true // You could optionally flag errors differently
+    }
   }
-
-  const loadPromises = day.value.meals.map((meal) => {
-    return new Promise<void>((resolve) => {
-      const img = new Image()
-      img.src = meal.signedUrl
-      img.onload = () => {
-        imageLoaded[meal.id] = true
-        resolve()
-      }
-      img.onerror = () => {
-        imageLoaded[meal.id] = true
-        resolve()
-      }
-    })
-  })
-
-  await Promise.all(loadPromises)
-  loading.value = false
 }
 
 async function onModelValueUpdate(newValue: CalendarDate) {
-  loading.value = true
   const date = new Date(newValue.year - 543, newValue.month - 1, newValue.day + 1)
   day.value = await getDayMealsAndStats(date.toISOString().split('T')[0])
   if (day.value && day.value.stats) {
