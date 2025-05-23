@@ -30,6 +30,7 @@ declare module 'vue-router/auto-routes' {
     '/progress/ProgressGrade': RouteRecordInfo<'/progress/ProgressGrade', '/progress/ProgressGrade', Record<never, never>, Record<never, never>>,
     '/progress/ProgressNav': RouteRecordInfo<'/progress/ProgressNav', '/progress/ProgressNav', Record<never, never>, Record<never, never>>,
     '/progress/ProgressSection': RouteRecordInfo<'/progress/ProgressSection', '/progress/ProgressSection', Record<never, never>, Record<never, never>>,
+    '/progress/section-components/DatePicker': RouteRecordInfo<'/progress/section-components/DatePicker', '/progress/section-components/DatePicker', Record<never, never>, Record<never, never>>,
     '/progress/section-components/DayProgress': RouteRecordInfo<'/progress/section-components/DayProgress', '/progress/section-components/DayProgress', Record<never, never>, Record<never, never>>,
     '/progress/section-components/Diary': RouteRecordInfo<'/progress/section-components/Diary', '/progress/section-components/Diary', Record<never, never>, Record<never, never>>,
     '/progress/section-components/MonthProgress': RouteRecordInfo<'/progress/section-components/MonthProgress', '/progress/section-components/MonthProgress', Record<never, never>, Record<never, never>>,
