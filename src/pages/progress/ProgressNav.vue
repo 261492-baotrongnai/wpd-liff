@@ -1,25 +1,18 @@
 <template>
-  <div class="progress-nav">
+  <div class="progress-nav border-1 border-neutral bg-neutral">
     <div
       class="nav-button"
-      :class="{ active: activePeriod === 'Days' }"
-      @click="setActivePeriod('Days')"
+      :class="{ active: activeSection === 'Diary' }"
+      @click="setActiveSection('Diary')"
     >
-      รายวัน
+      ดูบันทึกย้อนหลัง
     </div>
     <div
       class="nav-button"
-      :class="{ active: activePeriod === 'Weeks' }"
-      @click="setActivePeriod('Weeks')"
+      :class="{ active: activeSection === 'Stats' }"
+      @click="setActiveSection('Stats')"
     >
-      รายสัปดาห์
-    </div>
-    <div
-      class="nav-button"
-      :class="{ active: activePeriod === 'Months' }"
-      @click="setActivePeriod('Months')"
-    >
-      รายเดือน
+      ดูสถิติที่ผ่านมา
     </div>
   </div>
 </template>
@@ -28,16 +21,16 @@ export default {
   name: 'ProgressNav',
   data() {
     return {
-      activePeriod: 'Days',
+      activeSection: 'Diary',
     }
   },
   methods: {
-    setActivePeriod(period: string) {
-      this.activePeriod = period
-      this.setPeriod(period)
+    setActiveSection(section: string) {
+      this.activeSection = section
+      this.setSection(section)
     },
-    setPeriod(period: string) {
-      this.$emit('updatePeriod', period)
+    setSection(section: string) {
+      this.$emit('updateSection', section)
     },
   },
 }
@@ -47,16 +40,17 @@ export default {
   display: flex;
   flex-direction: row;
   justify-content: space-around;
+  width: full;
+  height: 50px;
   align-items: center;
-  background-color: #f7f7f7;
-  padding: 8px;
   border-radius: 8px;
-  border: #535353 solid 1px;
 }
 
 .nav-button {
   padding: 10px 20px;
   border-radius: 8px;
+  height: full;
+
   cursor: pointer;
   transition: background-color 0.3s ease;
 }

@@ -1,26 +1,22 @@
 <template>
   <div class="progress-section">
-    <h1 class="header-content">บันทึกอาหารย้อนหลัง</h1>
-    <DayProgress v-if="selectedPeriod === 'Days'" @updateGrade="emitGradeUpdate" />
-    <WeekProgress v-if="selectedPeriod === 'Weeks'" @updateGrade="emitGradeUpdate" />
-    <MonthProgress v-if="selectedPeriod === 'Months'" @updateGrade="emitGradeUpdate" />
+    <Diary v-if="selectedSection === 'Diary'" @updateGrade="emitGradeUpdate" />
+    <Stats v-if="selectedSection === 'Stats'" @updateGrade="emitGradeUpdate" />
   </div>
 </template>
 
 <script lang="ts">
-import DayProgress from './section-components/DayProgress.vue'
-import MonthProgress from './section-components/MonthProgress.vue'
-import WeekProgress from './section-components/WeekProgress.vue'
+import Diary from './section-components/Diary.vue'
+import Stats from './section-components/Stats.vue'
 
 export default {
   name: 'ProgressSection',
   components: {
-    DayProgress,
-    WeekProgress,
-    MonthProgress,
+    Diary,
+    Stats,
   },
   props: {
-    selectedPeriod: {
+    selectedSection: {
       type: String,
       required: true,
     },
@@ -35,7 +31,7 @@ export default {
     },
   },
   mounted() {
-    console.log('ProgressSection mounted', this.selectedPeriod)
+    console.log('ProgressSection mounted', this.selectedSection)
   },
 }
 </script>

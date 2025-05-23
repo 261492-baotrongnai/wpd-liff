@@ -1,13 +1,8 @@
 <template>
   <div class="progress-page" v-if="!loading">
-    <ProgressNav @updatePeriod="updatePeriod" />
-    <div class="flex flex-col">
-      <ProgressGrade :grade="grade" :period="period" />
-      <button class="share-button">แชร์ให้คนอื่นดู</button>
-      <div class="section-separator"></div>
-    </div>
-
-    <ProgressSection :selectedPeriod="period" @updateGrade="updateGrade" />
+    <ProgressNav @updateSection="updateSection" />
+    <ProgressSection :selectedSection="section" @updateGrade="updateGrade" />
+    <button class="share-button">แชร์ให้คนอื่นดู</button>
   </div>
   <div v-else class="flex flex-col gap-4 w-full items-center justify-center">
     <USkeleton class="h-[62px] w-[433px] rounded-lg" />
@@ -21,12 +16,12 @@
       <USkeleton class="h-[30px] w-[100px] rounded-lg" />
     </div>
   </div>
+
 </template>
 
 <script lang="ts">
 import { initializeLiff } from '../../services/liff.service'
 import ProgressNav from './ProgressNav.vue'
-import ProgressGrade from './ProgressGrade.vue'
 import ProgressSection from './ProgressSection.vue'
 import type { Meal } from '../types/meal.types'
 
@@ -34,20 +29,19 @@ export default {
   name: 'ProgressPage',
   components: {
     ProgressNav,
-    ProgressGrade,
     ProgressSection,
   },
   data() {
     return {
       grade: '',
-      period: 'Days',
+      section: 'Diary',
       meals: null as Meal[] | null | undefined,
       loading: true, // Add a loading state
     }
   },
   methods: {
-    updatePeriod(newPeriod: string) {
-      this.period = newPeriod
+    updateSection(newSection: string) {
+      this.section = newSection
     },
     updateGrade(newGrade: string) {
       this.grade = newGrade
