@@ -52,7 +52,11 @@
 <script setup lang="ts">
 import { onMounted, shallowRef } from 'vue'
 import type { Meal, MealStats } from '../../../types/meal.types'
-import { getTodayMealsAndStats, getDayMealsAndStats, getAllProgress } from '../progress.service'
+import {
+  getTodayMealsAndStats,
+  getDayMealsAndStats,
+  getAllProgress,
+} from '../../../services/progress.service'
 import {
   BuddhistCalendar,
   CalendarDate,

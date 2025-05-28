@@ -54,7 +54,7 @@
         :class="getColorByDate(day.date, 'horizontal-calendar')"
         @click="updateValue(day.calendarDate)"
       >
-        <div class="wekkday-label">{{ day.weekday }}</div>
+        <div class="weekday-label">{{ day.weekday }}</div>
         {{ day.date.getDate() }}
       </div>
     </div>

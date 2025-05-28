@@ -149,3 +149,18 @@ export function scoreToGrade(score: number): string {
   }
   return 'C'
 }
+
+export async function getTodaySummary(): Promise<MealStats | undefined> {
+  const response = await apiService.get<MealStats>(`/meals/today-summary`)
+  return response
+}
+
+export async function getWeekSummary(): Promise<MealStats | undefined> {
+  const response = await apiService.get<MealStats>(`/meals/week-summary`)
+  return response
+}
+
+export async function getMonthSummary(): Promise<MealStats | undefined> {
+  const response = await apiService.get<MealStats>(`/meals/month-summary`)
+  return response
+}
