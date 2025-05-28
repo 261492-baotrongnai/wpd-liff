@@ -44,11 +44,11 @@
 <script lang="ts">
 import { initializeLiff } from '../../utility/liffUtils'
 import liff from '@line/liff'
-import DuoStatus from './DuoStatus.vue'
-import UserFrame from './UserFrame.vue'
-import FrameStore from './FrameStore.vue'
-import ProgressCoin from './ProgressCoin.vue'
-import Mali from './Mali.vue'
+import DuoStatus from '../../components/achievement/DuoStatus.vue'
+import UserFrame from '../../components/achievement/UserFrame.vue'
+import FrameStore from '../../components/achievement/FrameStore.vue'
+import ProgressCoin from '../../components/achievement/ProgressCoin.vue'
+import Mali from '../../components/achievement/Mali.vue'
 
 export default {
   name: 'AchievementIndex',

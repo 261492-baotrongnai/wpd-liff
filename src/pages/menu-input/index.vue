@@ -107,7 +107,7 @@
 
 <script lang="ts">
 import { ref } from 'vue'
-import { getMenuCandidates } from './menuinput.service'
+import { getMenuCandidates } from '../../services/menuinput.service'
 import liff from '@line/liff'
 import { initializeLiff } from '../../services/liff.service'
 
