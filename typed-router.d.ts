@@ -20,23 +20,8 @@ declare module 'vue-router/auto-routes' {
   export interface RouteNamedMap {
     '/': RouteRecordInfo<'/', '/', Record<never, never>, Record<never, never>>,
     '/achievement/': RouteRecordInfo<'/achievement/', '/achievement', Record<never, never>, Record<never, never>>,
-    '/achievement/DuoStatus': RouteRecordInfo<'/achievement/DuoStatus', '/achievement/DuoStatus', Record<never, never>, Record<never, never>>,
-    '/achievement/FrameStore': RouteRecordInfo<'/achievement/FrameStore', '/achievement/FrameStore', Record<never, never>, Record<never, never>>,
-    '/achievement/Mali': RouteRecordInfo<'/achievement/Mali', '/achievement/Mali', Record<never, never>, Record<never, never>>,
-    '/achievement/ProgressCoin': RouteRecordInfo<'/achievement/ProgressCoin', '/achievement/ProgressCoin', Record<never, never>, Record<never, never>>,
-    '/achievement/UserFrame': RouteRecordInfo<'/achievement/UserFrame', '/achievement/UserFrame', Record<never, never>, Record<never, never>>,
     '/menu-input/': RouteRecordInfo<'/menu-input/', '/menu-input', Record<never, never>, Record<never, never>>,
     '/progress/': RouteRecordInfo<'/progress/', '/progress', Record<never, never>, Record<never, never>>,
-    '/progress/ProgressGrade': RouteRecordInfo<'/progress/ProgressGrade', '/progress/ProgressGrade', Record<never, never>, Record<never, never>>,
-    '/progress/ProgressNav': RouteRecordInfo<'/progress/ProgressNav', '/progress/ProgressNav', Record<never, never>, Record<never, never>>,
-    '/progress/ProgressSection': RouteRecordInfo<'/progress/ProgressSection', '/progress/ProgressSection', Record<never, never>, Record<never, never>>,
-    '/progress/section-components/DatePicker': RouteRecordInfo<'/progress/section-components/DatePicker', '/progress/section-components/DatePicker', Record<never, never>, Record<never, never>>,
-    '/progress/section-components/DayProgress': RouteRecordInfo<'/progress/section-components/DayProgress', '/progress/section-components/DayProgress', Record<never, never>, Record<never, never>>,
-    '/progress/section-components/Diary': RouteRecordInfo<'/progress/section-components/Diary', '/progress/section-components/Diary', Record<never, never>, Record<never, never>>,
-    '/progress/section-components/Stats': RouteRecordInfo<'/progress/section-components/Stats', '/progress/section-components/Stats', Record<never, never>, Record<never, never>>,
     '/user-classification/': RouteRecordInfo<'/user-classification/', '/user-classification', Record<never, never>, Record<never, never>>,
-    '/user-classification/CommonTerm': RouteRecordInfo<'/user-classification/CommonTerm', '/user-classification/CommonTerm', Record<never, never>, Record<never, never>>,
-    '/user-classification/PopupEnterCode': RouteRecordInfo<'/user-classification/PopupEnterCode', '/user-classification/PopupEnterCode', Record<never, never>, Record<never, never>>,
-    '/user-classification/TestTerm': RouteRecordInfo<'/user-classification/TestTerm', '/user-classification/TestTerm', Record<never, never>, Record<never, never>>,
   }
 }

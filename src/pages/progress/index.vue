@@ -16,14 +16,13 @@
       <USkeleton class="h-[30px] w-[100px] rounded-lg" />
     </div>
   </div>
-
 </template>
 
 <script lang="ts">
 import { initializeLiff } from '../../services/liff.service'
-import ProgressNav from './ProgressNav.vue'
-import ProgressSection from './ProgressSection.vue'
-import type { Meal } from '../types/meal.types'
+import ProgressNav from '../../components/progress/ProgressNav.vue'
+import ProgressSection from '../../components/progress/ProgressSection.vue'
+import type { Meal } from '../../types/meal.types'
 
 export default {
   name: 'ProgressPage',

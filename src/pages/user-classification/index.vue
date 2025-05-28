@@ -40,8 +40,8 @@
 <script lang="ts">
 import { liffInitUserClassification } from '../../services/liff.service'
 // import liff from '@line/liff'
-import PopupEnterCode from './PopupEnterCode.vue'
-import CommonTerm from './CommonTerm.vue'
+import PopupEnterCode from '../../components/user-classification/PopupEnterCode.vue'
+import CommonTerm from '../../components/user-classification/CommonTerm.vue'
 
 export default {
   name: 'UserClassification',

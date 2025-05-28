@@ -51,7 +51,7 @@
 
 <script setup lang="ts">
 import { onMounted, shallowRef } from 'vue'
-import type { Meal, MealStats } from '../../types/meal.types'
+import type { Meal, MealStats } from '../../../types/meal.types'
 import { getTodayMealsAndStats, getDayMealsAndStats, getAllProgress } from '../progress.service'
 import {
   BuddhistCalendar,
@@ -97,7 +97,6 @@ function getColorByDate(date: Date) {
   )
   const todayString = new Date().toLocaleDateString('en-CA', { timeZone: getLocalTimeZone() })
   const currentSelectedString = currentSelected.toISOString().split('T')[0]
-
 
   if (dateString === currentSelectedString) return undefined
   if (dateExists.value) {

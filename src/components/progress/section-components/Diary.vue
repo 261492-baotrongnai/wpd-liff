@@ -46,7 +46,7 @@
 
 <script setup lang="ts">
 import { onMounted, shallowRef } from 'vue'
-import { getTodayMealsAndStats, getDayMealsAndStats, getAllProgress } from '../progress.service'
+import { getTodayMealsAndStats, getDayMealsAndStats, getAllProgress } from '../../../services/progress.service'
 import DatePicker from './DatePicker.vue'
 import {
   DateFormatter,
@@ -54,7 +54,7 @@ import {
   CalendarDate,
   BuddhistCalendar,
 } from '@internationalized/date'
-import type { Meal, MealStats } from '../../types/meal.types'
+import type { Meal, MealStats } from '../../../types/meal.types'
 import { reactive, nextTick } from 'vue'
 
 const imageLoaded = reactive<{ [key: string]: boolean }>({})
