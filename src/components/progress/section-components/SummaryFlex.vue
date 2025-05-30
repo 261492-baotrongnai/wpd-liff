@@ -16,7 +16,7 @@
           <div style="background-color: #ccc">image char</div>
         </div>
 
-        <div v-else class="grade-section text-xl">
+        <div v-else class="grade-section">
           <p>ยังไม่มีข้อมูลการบันทึกค่ะ</p>
         </div>
       </div>
