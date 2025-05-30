@@ -8,12 +8,16 @@
           <p>{{ getPeriodText().label }}</p>
         </div>
 
-        <div class="grade-section text-xl">
+        <div v-if="stats?.totalFood !== 0" class="grade-section text-xl">
           <p>{{ stats?.avgGrade }}</p>
         </div>
 
-        <div class="grade-section">
+        <div v-if="stats?.totalFood !== 0" class="grade-section">
           <div style="background-color: #ccc">image char</div>
+        </div>
+
+        <div v-else class="grade-section text-xl">
+          <p>ยังไม่มีข้อมูลการบันทึกค่ะ</p>
         </div>
       </div>
       <div class="flex flex-row gap-2">
