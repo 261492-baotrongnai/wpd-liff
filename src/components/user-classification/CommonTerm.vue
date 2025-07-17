@@ -1,11 +1,16 @@
 <template>
   <div class="flex flex-col gap-2 justify-center items-center">
     <!-- <div>Code ของคุณ: {{ code }}</div> -->
-    <div class="head">👤ผู้ใช้งานทั่วไป</div>
+    <div class="head flex">
+      <img src="../../assets/user-classification/commonUserIcon.svg" style="height: 36px;"/>
+      <p class="head-text-style">ผู้ใช้งานทั่วไป</p>
+    </div>
     <div class="flex flex-col gap-2 px-8">
-      <p class="text-left">ข้อตกลงในการใช้บริการ</p>
+      <p class="term-header">
+        ข้อตกลงในการใช้บริการ
+      </p>
 
-      <p class="px-4 text-left">
+      <p class="term-detail px-4">
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce ultricies nulla ante, non
         pretium ipsum congue et. Aliquam condimentum, eros et mollis scelerisque, leo massa tempus
         est, nec vestibulum dolor turpis ac arcu. Morbi pretium est non lectus volutpat laoreet.
@@ -18,12 +23,17 @@
     </div>
 
     <div class="agree-bottom-bar">
-      <UCheckbox
-        v-model="isAgreed"
-        required
-        label="ฉันได้อ่านและยอมรับ ข้อตกลงในการใช้บริการ"
-        class="gap-2"
-      />
+      <div class="flex">
+        <UCheckbox
+          v-model="isAgreed"
+          required
+          class="gap-2 px-2"
+          style="height: 25px; width: 25px;"
+        />
+        <span>ฉันได้อ่านและยอมรับ</span>
+        <span class="underline">ข้อตกลงในการใช้บริการ</span>
+      </div>
+
 
       <UButton
         trailing-icon="i-lucide-arrow-right"
@@ -72,11 +82,26 @@ export default {
   color: #393939;
   margin-block: 30px;
 
-  background-color: #e9fea9;
   padding-left: 10px;
   padding-right: 10px;
+  padding-top: 12px;
+  padding-bottom: 12px;
   border-radius: 60px;
   width: fit-content;
+
+  border-radius: 12px;
+  background: #DEEDFF;
+}
+.head-text-style {
+  color: #194678;
+  text-align: center;
+
+  /* H3 */
+  font-size: 22px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 32px; /* 145.455% */
+  letter-spacing: 0.22px;
 }
 .agree-bottom-bar {
   position: fixed;
@@ -91,5 +116,43 @@ export default {
   flex-direction: column;
   align-items: center;
   gap: 8px; /* Space between checkbox and button */
+}
+
+.underline {
+  text-decoration-line: underline;
+  text-decoration-style: solid;
+  text-decoration-skip-ink: auto;
+  text-decoration-thickness: auto;
+  text-underline-offset: auto;
+  text-underline-position: from-font;
+}
+
+.term-header {
+  color: #194678;
+  text-align: left;
+
+  /* Paragraph2 */
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 28px; /* 155.556% */
+  letter-spacing: 0.18px;
+}
+
+.term-detail {
+  color: var(--main-text, #194678);
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 24px; /* 150% */
+  letter-spacing: 0.16px;
+}
+
+p {
+  font-family: "Noto Looped Thai UI";
+}
+
+span {
+  font-family: "Noto Looped Thai UI";
 }
 </style>
