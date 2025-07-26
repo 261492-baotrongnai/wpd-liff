@@ -22,7 +22,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 // import liff from '@line/liff'
-// import { initializeLiff } from '../utility/liffUtils'
+import { initializeLiff } from '../utility/liffUtils'
 
 export default defineComponent({
   name: 'IndexPage',
@@ -36,15 +36,15 @@ export default defineComponent({
       test_iid: '',
     }
   },
-  // mounted() {
-  //   initializeLiff('VITE_LIFF_ID')
-  // },
+  mounted() {
+    initializeLiff('VITE_LIFF_ID')
+  },
 })
 </script>
 
 <style>
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
+  /* font-family: Avenir, Helvetica, Arial, sans-serif; */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;

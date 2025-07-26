@@ -1,5 +1,6 @@
 <template>
-  <div class="flex flex-col gap-2 justify-center items-center">
+  <div class="flex flex-col gap-2 justify-center items-center" v-if="displayCommon">
+    <button @click="$emit('close')" class="back-button">กลับ</button>
     <!-- <div>Code ของคุณ: {{ code }}</div> -->
     <div class="head flex">
       <img src="../../assets/user-classification/commonUserIcon.svg" style="height: 36px;"/>
@@ -30,8 +31,10 @@
           class="gap-2 px-2"
           style="height: 25px; width: 25px;"
         />
-        <span>ฉันได้อ่านและยอมรับ</span>
-        <span class="underline">ข้อตกลงในการใช้บริการ</span>
+        <div>
+          <span>ฉันได้อ่านและยอมรับ</span>
+          <span class="underline">ข้อตกลงในการใช้บริการ</span>
+        </div>
       </div>
 
 
@@ -57,6 +60,12 @@ export default {
     return {
       isAgreed: false,
     }
+  },
+  props: {
+    displayCommon: {
+      type: Boolean,
+      required: true,
+    },
   },
   methods: {
     async commonSuccess() {
@@ -148,11 +157,5 @@ export default {
   letter-spacing: 0.16px;
 }
 
-p {
-  font-family: "Noto Looped Thai UI";
-}
 
-span {
-  font-family: "Noto Looped Thai UI";
-}
 </style>

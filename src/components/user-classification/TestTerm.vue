@@ -1,10 +1,10 @@
 <template>
   <div class="flex flex-col gap-2 justify-center items-center">
-    <!-- <div>Code ของคุณ: {{ code }}</div> -->
+    <button @click="$emit('close')" class="back-button">กลับ</button>
     <div class="flex flex-col gap-2 px-8">
       <p class="text-left">ข้อตกลงในการใช้บริการ</p>
-
-      <p class="px-4 text-left">
+      <p class="px-4 text-left"
+      style="max-height: 80%;">
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce ultricies nulla ante, non
         pretium ipsum congue et. Aliquam condimentum, eros et mollis scelerisque, leo massa tempus
         est, nec vestibulum dolor turpis ac arcu. Morbi pretium est non lectus volutpat laoreet.
@@ -17,20 +17,27 @@
     </div>
 
     <div class="agree-bottom-bar">
-      <UCheckbox
-        v-model="isAgreed"
-        required
-        label="ฉันได้อ่านและยอมรับ ข้อตกลงในการใช้บริการ"
-        class="gap-2"
-      />
+      <div class="flex">
+        <UCheckbox
+          v-model="isAgreed"
+          required
+          class="gap-2 px-2"
+          style="height: 25px; width: 25px;"
+        />
+        <div>
+          <span>ฉันได้อ่านและยอมรับ</span>
+          <span class="underline">ข้อตกลงในการใช้บริการ</span>
+        </div>
+      </div>
 
       <UButton
         trailing-icon="i-lucide-arrow-right"
+        class="agree-box-button"
         size="lg"
         :disabled="!isAgreed"
         @click="testSuccess"
       >
-        เข้าใช้งานได้เลย
+        เข้าใช้งาน
       </UButton>
     </div>
   </div>
@@ -86,4 +93,19 @@ export default {
   align-items: center;
   gap: 8px; /* Space between checkbox and button */
 }
+
+.agree-box-button {
+  border-radius: 15px;
+  background: var(--light-gray, #ECEFF2);
+}
+
+.underline {
+  text-decoration-line: underline;
+  text-decoration-style: solid;
+  text-decoration-skip-ink: auto;
+  text-decoration-thickness: auto;
+  text-underline-offset: auto;
+  text-underline-position: from-font;
+}
+
 </style>

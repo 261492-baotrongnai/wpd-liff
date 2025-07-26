@@ -1,21 +1,22 @@
 <template>
     <img src = "../../assets/user-classification/wpdLogo.svg"
-    class = "banner px-30"/>
+    class = "banner px-30"
+    v-if="!showEnterCode && !showCommonTerm"/>
     <!-- <img src="https://i.postimg.cc/Yq1bKt42/logo.png" class="px-30"/> -->
-  <div v-if="!showEnterCode && !showCommonTerm" style="margin-top: 30px">
+    <div v-if="!showEnterCode && !showCommonTerm" style="margin-top: 30px">
     <!-- <h3 class="greeting">ยินดีต้อนรับสู่ "หวานพอดี" นะคะ</h3> -->
     <span class="instruction">ก่อนเข้าใช้งาน กรุณากดเพื่อเลือกประเภทของคุณค่ะ</span>
     <div class="button-container">
-        <!-- ผู้ใช้งานทั่วไป -->
-        <button
-        @click="selectButton('common')"
-        :class="['box', 'common-user', { commonUserSelected: commonSelected }]"
-        >
-          <img src="../../assets/user-classification/commonUserIcon.svg"/>
-          <div>
-            <p class = "text-inside-classification-button">
-              ผู้ใช้งานทั่วไป
-            </p>
+      <!-- ผู้ใช้งานทั่วไป -->
+      <button
+      @click="selectButton('common')"
+      :class="['box', 'common-user', { commonUserSelected: commonSelected }]"
+      >
+      <img src="../../assets/user-classification/commonUserIcon.svg"/>
+      <div>
+        <p class = "text-inside-classification-button">
+          ผู้ใช้งานทั่วไป
+        </p>
             <p class = "text-inside-classification-button" style="font-size: 16px;">
               (ไม่อยู่ในโครงการใดๆ)
             </p>
@@ -23,15 +24,15 @@
         </button>
         <!-- ผู้เข้าร่วมโครงการกับโรงพยาบาล -->
         <button
-          @click="selectButton('test')"
-          :class="['box', 'test-user', { testUserSelected: testSelected }]"
-          style="margin-top: 25px;"
+        @click="selectButton('test')"
+        :class="['box', 'test-user', { testUserSelected: testSelected }]"
+        style="margin-top: 25px;"
         >
-          <img src="../../assets/user-classification/testUserIcon.svg"/>
-          <p class = "text-inside-classification-button">
-            ผู้เข้าร่วมโครงการกับโรงพยาบาล
-          </p>
-        </button>
+        <img src="../../assets/user-classification/testUserIcon.svg"/>
+        <p class = "text-inside-classification-button">
+          ผู้เข้าร่วมโครงการกับโรงพยาบาล
+        </p>
+      </button>
     </div>
 
     <div v-if="commonSelected || testSelected">
@@ -54,9 +55,9 @@
   </div>
 
   <!-- Use the PopupEnterCode component -->
-  <PopupEnterCode :visible="showEnterCode" @close="showEnterCode = false" />
+  <PopupEnterCode :displayEnterCode="showEnterCode" @close="showEnterCode = false" />
 
-  <CommonTerm v-if="showCommonTerm" />
+  <CommonTerm :displayCommon="showCommonTerm" @close="showCommonTerm = false"/>
 </template>
 
 <script lang="ts">
@@ -64,6 +65,7 @@ import { liffInitUserClassification } from '../../services/liff.service'
 // import liff from '@line/liff'
 import PopupEnterCode from '../../components/user-classification/PopupEnterCode.vue'
 import CommonTerm from '../../components/user-classification/CommonTerm.vue'
+import '../../assets/user-classification/back-button.css'
 
 export default {
   name: 'UserClassification',
@@ -91,7 +93,7 @@ export default {
     },
   },
   mounted() {
-    // liffInitUserClassification()
+    liffInitUserClassification()
   },
 }
 </script>
@@ -110,7 +112,6 @@ export default {
   text-align: center;
   margin-top: 20px;
   color: #194678;
-  font-family: "Noto Looped Thai UI";
   font-size: 18px;
   font-style: normal;
   font-weight: 400;
@@ -203,7 +204,6 @@ export default {
 .text-inside-classification-button {
   color: var(--main-text, #194678);
   text-align: center;
-  font-family: "Noto Looped Thai UI";
   font-size: 20px;
   font-style: normal;
   font-weight: 400;
@@ -213,9 +213,9 @@ export default {
 }
 
 .banner {
-
   background: linear-gradient(90deg, #DDECFF 0%, #F8FFDE 100%);
-  width:100%;
+  height: 5rem;
+  width: 100%;
   padding-top: 3px;
   padding-bottom: 3px;
 }
