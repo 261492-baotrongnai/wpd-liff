@@ -188,6 +188,15 @@ export class AuthService {
   public logout(): void {
     this.clearToken()
   }
+
+  public async shortToken() {
+    const response = await axios.get(`${API}/auth/short-token`, {})
+    if (response.status >= 200 && response.status < 300) {
+      localStorage.setItem('shortToken', response.data.token)
+    } else {
+      throw new Error('Failed to get short token')
+    }
+  }
 }
 
 // Export a default instance
