@@ -34,6 +34,7 @@
 
 <script lang="ts">
 import { apiService } from '@/services/api.service'
+import { authService } from '@/services/auth.service'
 import { PhCaretLeft } from '@phosphor-icons/vue'
 export default {
   name: 'PopupEnterCode',
@@ -85,14 +86,23 @@ export default {
       // this.enteredCode = code
       // this.showEnterCode = false
       await apiService
-        .get('/programs/validate-code', { params: { code: this.code } })
+        .post(
+          '/program/validate-code',
+          {
+            code: this.code,
+          },
+          {
+            headers: { 'x-short-token': localStorage.getItem('shortToken') },
+          },
+        )
         .then(() => {
+          this.$emit('code-entered', this.code)
           this.$emit('showTestTerm')
         })
         .catch((error) => {
           console.error('Error validating code อิอิ:', error)
           this.showError = 'ไม่มีโครงการนี้' // แสดงข้อความแสดงข้อผิดพลาด
-          this.$emit('showTestTerm') // เดี๋ยวมาแก้ไข
+          // this.$emit('showTestTerm') // เอาไว้ test เดี๋ยวมาแก้ไข
         })
     },
     handleTestTermClose() {
@@ -131,8 +141,14 @@ export default {
     },
   },
   mounted() {
-    console.log('PopupEnterCode mounted')
-    // this.showError = localStorage.getItem('validationError') || ''
+    authService
+      .shortToken()
+      .then(() => {
+        console.log('Short token set successfully')
+      })
+      .catch((error) => {
+        console.error('Error setting short token:', error)
+      })
   },
 }
 </script>
