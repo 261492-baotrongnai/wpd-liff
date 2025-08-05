@@ -100,9 +100,22 @@ export default {
           this.$emit('showTestTerm')
         })
         .catch((error) => {
-          console.error('Error validating code อิอิ:', error)
-          this.showError = 'ไม่มีโครงการนี้' // แสดงข้อความแสดงข้อผิดพลาด
+          console.error('Error validating code:', error)
+          if (error.response && error.response.status === 404) {
+            this.showError = 'ไม่มีโครงการนี้'
+            localStorage.setItem('shortToken', error.response.data.newToken || '')
+          } else if (error.response && error.response.status === 403) {
+            this.showError = 'เกิดข้อผิดพลาดในการตรวจสอบรหัส กรุณาลองใหม่อีกครั้ง'
+          }
           // this.$emit('showTestTerm') // เอาไว้ test เดี๋ยวมาแก้ไข
+          authService
+            .shortToken()
+            .then(() => {
+              console.log('Short token updated successfully')
+            })
+            .catch((err) => {
+              console.error('Error updating short token:', err)
+            })
         })
     },
     handleTestTermClose() {
