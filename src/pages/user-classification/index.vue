@@ -172,6 +172,7 @@ export default {
 <style scoped>
 .page-bg {
   min-height: 100vh;
+  min-width: 100vw;
   background: #f2f8fc;
   display: flex;
   flex-direction: column;
