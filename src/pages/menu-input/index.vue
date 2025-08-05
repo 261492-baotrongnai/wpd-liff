@@ -50,7 +50,7 @@
       <div class="clear-button-wrapper">
         <button class="clear-button-custom" @click="showModal = true">
           <div class="icon-wrapper"><PhTrashSimple :size="20" /></div>
-          <span class="clear-text">ลบทั้งหมด</span>
+          <span class="clear-text nowrap">ลบทั้งหมด</span>
         </button>
       </div>
     </div>
