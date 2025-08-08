@@ -190,14 +190,14 @@ export default {
 
   async mounted() {
     // MOCK ข้อมูลสำหรับ dev
-    // this.candidates = ['ข้าวผัดหมู', 'ส้มตำปูปลาร้า', 'ข้าวต้ม', 'ผัดไทย']
-    // this.loading = false
-    // ถ้าต้องการใช้ API จริง ให้ comment ส่วน mock ข้างบน แล้วใช้โค้ดนี้แทน
-    await initializeLiff('VITE_LIFF_ID_MENU_INPUT')
-    await getMenuCandidates().then((candidates) => {
-     this.candidates = candidates
-    })
+    this.candidates = ['ข้าวผัดหมู', 'ส้มตำปูปลาร้า', 'ข้าวต้ม', 'ผัดไทย']
     this.loading = false
+    // ถ้าต้องการใช้ API จริง ให้ comment ส่วน mock ข้างบน แล้วใช้โค้ดนี้แทน
+    // await initializeLiff('VITE_LIFF_ID_MENU_INPUT')
+    // await getMenuCandidates().then((candidates) => {
+    //  this.candidates = candidates
+    // })
+    // this.loading = false
   },
 }
 </script>

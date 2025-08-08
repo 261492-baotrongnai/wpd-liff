@@ -45,6 +45,5 @@ export default {
 .progress-section {
   display: flex;
   flex-direction: column;
-  gap: 10px;
 }
 </style>

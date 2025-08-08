@@ -6,17 +6,24 @@
     @updateGrade="updateGrade"
   />
 
-  <div v-if="day && !loading" class="px-2">
-    <p>
+  <div v-if="day && !loading" class="diary-wrapper px-4 ">
+    <p class="date-header">
       {{
         modelValue
-          ? df
-              .format(modelValue.toDate(getLocalTimeZone()))
-              .replace('ที่ ', ', ')
-              .replace('พ.ศ. ', '')
+          ? isToday(modelValue)
+            ? 'วันนี้, ' +
+              df
+                .format(modelValue.toDate(getLocalTimeZone()))
+                .replace(/^วัน[^0-9]* /, '')
+                .replace('พ.ศ. ', '')
+            : df
+                .format(modelValue.toDate(getLocalTimeZone()))
+                .replace('ที่ ', ', ')
+                .replace('พ.ศ. ', '')
           : 'Select a date'
       }}
     </p>
+
     <div v-for="meal in day.meals" :key="meal.id" class="meal-item">
       <div
         v-if="imageLoaded[meal.id]"
@@ -30,15 +37,18 @@
         <p>{{ meal.avgGrade }}</p>
       </div>
     </div>
+    <div class="share-container">
+      <ShareButton />
+    </div>
   </div>
 
   <div v-else class="flex flex-col gap-2">
-    <USkeleton class="w-[170px] h-[25px]" />
+    <USkeleton class="w-[170px] h-[25px] bg-[#ECEFF2]" />
     <div class="p-2 flex flex-row mt-2 gap-2">
-      <USkeleton class="w-[100px] h-[100px]" />
+      <USkeleton class="w-[100px] h-[100px] bg-[#ECEFF2]" />
       <div class="flex flex-col gap-2 ml-2">
-        <USkeleton class="w-[200px] h-[25px]" />
-        <USkeleton class="w-[100px] h-[25px]" />
+        <USkeleton class="w-[200px] h-[25px] bg-[#ECEFF2]" />
+        <USkeleton class="w-[100px] h-[25px] bg-[#ECEFF2]" />
       </div>
     </div>
   </div>
@@ -46,8 +56,14 @@
 
 <script setup lang="ts">
 import { onMounted, shallowRef } from 'vue'
-import { getTodayMealsAndStats, getDayMealsAndStats, getAllProgress } from '../../../services/progress.service'
+import {
+  getTodayMealsAndStats,
+  getDayMealsAndStats,
+  getAllProgress,
+} from '../../../services/progress.service'
 import DatePicker from './DatePicker.vue'
+import ShareButton from './ShareButton.vue'
+
 import {
   DateFormatter,
   getLocalTimeZone,
@@ -127,6 +143,16 @@ async function onModelValueUpdate(newValue: CalendarDate) {
   loading.value = false
   await handleImagesLoaded()
 }
+
+function isToday(modelDate: CalendarDate): boolean {
+  const today = new Date()
+  const model = new Date(modelDate.year - 543, modelDate.month - 1, modelDate.day)
+  return (
+    today.getFullYear() === model.getFullYear() &&
+    today.getMonth() === model.getMonth() &&
+    today.getDate() === model.getDate()
+  )
+}
 </script>
 
 <script lang="ts">
@@ -136,6 +162,18 @@ export default {
 </script>
 
 <style scoped>
+.date-header {
+  color: var(--main-text, #194678);
+
+  /* Paragraph1 */
+  font-family: 'Noto Looped Thai UI';
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 32px; /* 160% */
+  letter-spacing: 0.2px;
+  margin:20px 0 20px 16px;
+}
 .meal-item {
   display: flex;
   flex-direction: row;
@@ -148,5 +186,19 @@ export default {
   background-size: cover;
   background-position: center;
   border-radius: 10%;
+}
+
+.diary-wrapper {
+  width: 100vw; /* กว้างเต็มจอ */
+  min-height: 100vh; /* สูงอย่างน้อยเต็มจอ */
+  background: #ffffff;
+  border-radius: 0; /* ถ้าไม่ต้องการขอบมน ให้เป็น 0 */
+  margin: 0; /* ไม่มี margin */
+  box-sizing: border-box;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  transform: translateX(-50%);
+  border-radius: 35px;
 }
 </style>
