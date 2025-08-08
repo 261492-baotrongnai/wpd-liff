@@ -1,11 +1,6 @@
 <template>
-  <UModal
-    :close="{
-      color: 'error',
-      variant: 'outline',
-      class: 'rounded-full',
-    }"
-  >
+  <!-- ส่วนหัว: แสดงเดือนและปีของวันที่เลือก -->
+  <div class="flex items-center justify-between px-4 mb-2">
     <div class="date-container flex flex-row justify-between items-center px-2">
       <p>
         {{
@@ -16,53 +11,125 @@
             : 'Select a date'
         }}
       </p>
-      <UButton
-        color="neutral"
-        variant="subtle"
-        icon="i-lucide-calendar"
-        class="w-fit justify-center"
-        size="sm"
-      />
     </div>
 
+    <!-- ปุ่มเปิดปฏิทิน -->
+    <UButton
+      color="neutral"
+      variant="ghost"
+      icon="i-lucide-calendar"
+      class="w-fit justify-center"
+      size="lg"
+      @click="isOpen = true"
+    />
+  </div>
+
+  <!-- Modal แสดงปฏิทิน -->
+  <UModal
+    v-model:open="isOpen"
+    :close="{
+      color: 'neutral',
+      variant: 'outline',
+      class: 'rounded-full',
+    }"
+  >
     <template #body>
       <UCalendar
         v-model="internalModelValue"
-        class="p-2"
-        size="xl"
+        class="p-2 text-lg"
+        size="lg"
         locale="th-TH"
-        @update:model-value="handleModelValueUpdate"
+        color="neutral"
+        :is-date-disabled="isFutureDate"
       >
+        <!-- render แต่ละวันในปฏิทิน -->
         <template #day="{ day }">
           <div
-            class="mx-auto size-full rounded-full justify-center align-middle flex items-center"
-            :class="getColorByDate(day.toDate('UTC'), 'datepicker')"
+            class="date-inline-calendar"
+            :class="[
+              getColorByDate(day.toDate(getLocalTimeZone()), 'datepicker'),
+              {
+                'non-clickable': isFutureDate({
+                  year: day.year,
+                  month: day.month,
+                  day: day.day,
+                }),
+                'selected-border-wrapper': isSameDate(
+                  day.toDate(getLocalTimeZone()),
+                  internalModelValue,
+                ),
+              },
+            ]"
+            @click.stop="
+              !isFutureDate({ year: day.year, month: day.month, day: day.day }) &&
+              onCalendarDayClick(day.toDate(getLocalTimeZone()))
+            "
           >
-            {{ day.day }}
+            <div
+              class="day-circle"
+              :class="getColorByDate(day.toDate(getLocalTimeZone()), 'datepicker')"
+            >
+              {{ day.day }}
+            </div>
           </div>
         </template>
       </UCalendar>
     </template>
+
+    <!-- ปุ่มยืนยันการเลือกวัน -->
+    <template #footer>
+      <div class="flex justify-center w-full mt-2">
+        <UButton
+          color="neutral"
+          variant="outline"
+          class="text-lg"
+          trailing-icon="i-lucide-arrow-right"
+          size="lg"
+          @click="handleConfirmClick"
+        >
+          ดูวันที่เลือก
+        </UButton>
+      </div>
+    </template>
   </UModal>
 
-  <div class="w-full px-2">
+  <!-- แสดงวันในสัปดาห์แบบแนวนอน -->
+  <div class="w-full px-4 py-4">
     <div class="horizontal-calendar flex justify-between">
       <div
         v-for="day in selectedWeek"
         :key="day.date.toISOString()"
         class="date-inline"
-        :class="getColorByDate(day.date, 'horizontal-calendar')"
-        @click="updateValue(day.calendarDate)"
+        :class="[
+          getColorByDate(day.date, 'horizontal-calendar'),
+          {
+            'selected-border-wrapper': isSameDate(day.date, modelValue),
+            'non-clickable': isFutureDate({
+              year: day.date.getFullYear(),
+              month: day.date.getMonth() + 1,
+              day: day.date.getDate(),
+            }),
+          },
+        ]"
+        @click="
+          !isFutureDate({
+            year: day.date.getFullYear(),
+            month: day.date.getMonth() + 1,
+            day: day.date.getDate(),
+          }) && updateValue(day.calendarDate)
+        "
       >
         <div class="weekday-label">{{ day.weekday }}</div>
         {{ day.date.getDate() }}
+        <div v-if="hasDateExists(day.date)" class="date-dot"></div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, watch, shallowRef } from 'vue'
+// import library ต่างๆ ที่ใช้จัดการวันที่และ reactive state
+import { computed, watch, shallowRef, ref } from 'vue'
 import {
   CalendarDate,
   BuddhistCalendar,
@@ -70,17 +137,26 @@ import {
   DateFormatter,
 } from '@internationalized/date'
 
+// state สำหรับ modal ปฏิทิน
+const isOpen = ref(false)
+const closedByUserAction = ref(false)
+
+// props ที่รับเข้ามา
 const props = defineProps<{
-  modelValue: CalendarDate
-  dateExists: { date: string; grade: string }[] | undefined
+  modelValue: CalendarDate // วันที่ที่เลือก
+  dateExists: { date: string; grade: string }[] | undefined // ข้อมูลวันและ grade ที่เคยบันทึก
 }>()
 
+// emit event ออกไปให้ parent component
 const emit = defineEmits<{
   (event: 'update:modelValue', value: CalendarDate): void
   (event: 'updateGrade', grade: string): void
 }>()
 
+// state สำหรับใช้ภายใน component (ไม่ส่งออกทันที)
 const internalModelValue = shallowRef(props.modelValue)
+
+// sync ค่าระหว่าง prop และ internal value
 watch(
   () => props.modelValue,
   (newVal) => {
@@ -88,18 +164,65 @@ watch(
   },
 )
 
+// รีเซ็ตค่าเมื่อปิด modal ถ้าไม่ได้ปิดโดยผู้ใช้กด confirm
+watch(isOpen, (newVal) => {
+  if (newVal) {
+    internalModelValue.value = props.modelValue
+  } else if (!closedByUserAction.value) {
+    internalModelValue.value = props.modelValue
+  }
+  closedByUserAction.value = false
+})
+
+// กดวันในปฏิทินแนวนอน
 function updateValue(value: CalendarDate) {
-  internalModelValue.value = value
   emit('update:modelValue', value)
+  internalModelValue.value = value
 }
 
+// ฟังก์ชันเมื่อเลือกวันจาก calendar
+function onCalendarDayClick(date: Date) {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const clicked = new Date(date)
+  clicked.setHours(0, 0, 0, 0)
+
+  // ห้ามเลือกวันในอนาคต
+  if (clicked > today) return
+
+  const calDate = new CalendarDate(
+    new BuddhistCalendar(),
+    clicked.getFullYear() + 543,
+    clicked.getMonth() + 1,
+    clicked.getDate(),
+  )
+  internalModelValue.value = calDate
+}
+
+// ปุ่มยืนยันการเลือกวัน
+function handleConfirmClick() {
+  closedByUserAction.value = true
+  confirmSelectedDate()
+  isOpen.value = false
+}
+
+// อัปเดตวันจริงเมื่อกด confirm
+function confirmSelectedDate() {
+  emit('update:modelValue', internalModelValue.value)
+  closedByUserAction.value = true
+  isOpen.value = false
+}
+
+// สร้าง array 7 วันจากวันปัจจุบัน (เพื่อแสดงแนวนอน)
 const selectedWeek = computed(() => {
-  if (!internalModelValue.value) return []
+  if (!props.modelValue) return []
+
   const weekdays = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส']
   const selectedDate = new Date(
-    internalModelValue.value.year - 543,
-    internalModelValue.value.month - 1,
-    internalModelValue.value.day,
+    props.modelValue.year - 543,
+    props.modelValue.month - 1,
+    props.modelValue.day,
   )
   const startOfWeek = new Date(selectedDate)
   startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay())
@@ -120,75 +243,202 @@ const selectedWeek = computed(() => {
   })
 })
 
-function toLocalISOString(date: Date): string {
-  const timezoneOffset = date.getTimezoneOffset() * 60000
-  return new Date(date.getTime() - timezoneOffset).toISOString().split('T')[0]
+// แปลง date เป็น string format YYYY-MM-DD เพื่อใช้เทียบกับข้อมูล
+function toLocalDateKey(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
-function getColorByDate(date: Date, comp?: string) {
-  const dateString = toLocalISOString(date)
-  const selected = new Date(
-    internalModelValue.value.year - 543,
-    internalModelValue.value.month - 1,
-    internalModelValue.value.day + 1,
+// เช็คว่าเป็นวันอนาคตหรือไม่ (รองรับ DateValue เช่น CalendarDate)
+function isFutureDate(date: { year: number; month: number; day: number }) {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  // แปลง CalendarDate เป็น Date ปกติ
+  const compareDate = new Date(date.year - 543, date.month - 1, date.day)
+  compareDate.setHours(0, 0, 0, 0)
+
+  return compareDate > today
+}
+
+// เช็คว่าเป็นวันเดียวกันหรือไม่ (ระหว่าง Date กับ CalendarDate)
+function isSameDate(d1: Date, d2?: CalendarDate) {
+  if (!d1 || !d2) return false
+  return (
+    d1.getDate() === d2.day && d1.getMonth() === d2.month - 1 && d1.getFullYear() === d2.year - 543
   )
-  const todayString = new Date().toLocaleDateString('en-CA', { timeZone: getLocalTimeZone() })
-  const currentSelectedString = selected.toISOString().split('T')[0]
-
-  let temp = ''
-  if (dateString === currentSelectedString && comp === 'horizontal-calendar') temp = `outline-1`
-
-  const foundDate = props.dateExists?.find((item) => item.date === dateString)
-  switch (foundDate?.grade) {
-    case 'A':
-      return dateString === todayString && comp === 'datepicker'
-        ? `outline-1 outline-[#90caf9]`
-        : `bg-[#90caf9]/50 ${temp}`
-    case 'B':
-      return dateString === todayString && comp === 'datepicker'
-        ? `outline-1 outline-[#ffd180]`
-        : `bg-[#ffd180]/50 ${temp}`
-    case 'C':
-      return dateString === todayString && comp === 'datepicker'
-        ? `outline-1 outline-[#ef9a9a]`
-        : `bg-[#ef9a9a]/50 ${temp}`
-  }
-  return temp
 }
 
-function handleModelValueUpdate(value: unknown) {
-  if (value) {
-    updateValue(value as CalendarDate)
-  }
-}
-</script>
+// คืน class CSS สำหรับแต่ละวัน (สีพื้นหลังตาม grade / ห้ามคลิก / วันอนาคต)
+function getColorByDate(date: Date, comp?: string) {
+  const dateKey = toLocalDateKey(date)
+  const sourceDate = comp === 'horizontal-calendar' ? props.modelValue : internalModelValue.value
 
-<script lang="ts">
-export default {
-  name: 'DatePicker',
+  const selected = new Date(sourceDate.year - 543, sourceDate.month - 1, sourceDate.day)
+  selected.setHours(0, 0, 0, 0)
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const compareDate = new Date(date)
+  compareDate.setHours(0, 0, 0, 0)
+
+  const isFuture = compareDate > today
+
+  const baseClass: string[] = []
+
+  if (comp === 'horizontal-calendar' || comp === 'datepicker') {
+    if (isFuture) baseClass.push('future-date')
+
+    const foundDate = props.dateExists?.find((item) => item.date === dateKey)
+    switch (foundDate?.grade) {
+      case 'A':
+        baseClass.push('grade-a')
+        break
+      case 'B':
+        baseClass.push('grade-b')
+        break
+      case 'C':
+        baseClass.push('grade-c')
+        break
+    }
+  }
+
+  return baseClass.join(' ')
+}
+// ตรวจสอบว่าวันที่นี้มีข้อมูลใน dateExists หรือไม่
+function hasDateExists(date: Date): boolean {
+  const dateKey = toLocalDateKey(date)
+  return !!props.dateExists?.find((item) => item.date === dateKey)
 }
 </script>
 
 <style scoped>
+/* ส่วนแสดงเดือน/ปี */
 .date-container {
   display: flex;
+  color: var(--main-text, #194678);
+  font-family: 'Noto Looped Thai UI';
+  font-size: 18px;
+}
+
+/* ปฏิทินแนวนอน */
+.horizontal-calendar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 50px;
+}
+
+/* กล่องวันที่ในแนวนอน */
+.date-inline {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  flex: 1 1 0;         /* responsive width */
+  min-width: 32px;     /* กำหนดขั้นต่ำ */
+  font-size: 18px;
+  border-radius: 10px;
+  height: 70px;
+  margin: 0 7px;       /* ระยะห่างซ้ายขวา */
+  box-sizing: border-box;
+  color: #194678;
+  background-color: #eeeaea;
 }
 .horizontal-calendar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 10px;
-  height: 50px;
+  height: 70px;
 }
-.date-inline {
+
+/* กรอบวันที่ที่ถูกเลือก */
+.selected-border-wrapper {
+  outline: 2px solid #98acc3;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* สีพื้นหลังตามระดับเกรด */
+.grade-a.date-inline {
+  background-color: #d2f3b5;
+  color: #194678;
+}
+.grade-b.date-inline {
+  background-color: #cfe3ff;
+  color: #194678;
+}
+.grade-c.date-inline {
+  background-color: #ffd0cd;
+  color: #194678;
+}
+
+/* สีวันในอนาคตหรือที่กดไม่ได้ */
+.future-date.date-inline,
+.non-clickable.date-inline {
+  background-color: #f0f0f0;
+  color: #898989;
+  opacity: 0.6;
+  pointer-events: none;
+}
+.day-circle {
+  width: 33px;
+  height: 33px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  margin: 0 auto;
+}
+
+/* สีพื้นหลังตามระดับเกรด */
+.grade-a.day-circle {
+  background-color: #d2f3b5;
+  color: #194678;
+}
+.grade-b.day-circle {
+  background-color: #cfe3ff;
+  color: #194678;
+}
+.grade-c.day-circle {
+  background-color: #ffd0cd;
+  color: #194678;
+}
+
+/* สีวันในอนาคตหรือที่กดไม่ได้ */
+.non-clickable .day-circle {
+  background-color: #f0f0f0;
+  color: #898989;
+  opacity: 0.6;
+}
+/* จุดแสดงสถานะการบันทึก */
+.date-dot {
+  width: 4px;
+  height: 4px;
+  background-color: #194678; /* ใช้สีที่เข้ากับธีม */
+  border-radius: 50%;
+  margin-top: 2px;
+}
+
+.date-inline-calendar {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 40px;
-  height: 100%;
-  border-radius: 20%;
-  font-size: 14px;
-  transition: outline 0.1s ease;
+  width: 33px;
+  height: 33px;
+  border-radius: 120px;
+}
+.date-inline-calendar.non-clickable {
+  background-color: #f0f0f0;
+  color: #898989;
+  opacity: 0.6;
+  pointer-events: none;
 }
 </style>

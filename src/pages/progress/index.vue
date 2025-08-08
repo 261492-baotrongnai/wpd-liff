@@ -1,19 +1,20 @@
 <template>
-  <div class="progress-page" v-if="!loading">
-    <ProgressNav @updateSection="updateSection" />
-    <ProgressSection :selectedSection="section" @updateGrade="updateGrade" />
-    <button class="share-button">แชร์ให้คนอื่นดู</button>
-  </div>
-  <div v-else class="flex flex-col gap-4 w-full items-center justify-center">
-    <USkeleton class="h-[62px] w-[433px] rounded-lg" />
-    <USkeleton class="h-[100px] w-[433px] rounded-lg" />
-    <USkeleton class="h-[30px] w-[103px] rounded-lg" />
-    <USkeleton class="h-[1px] w-[80%] rounded-lg" />
-    <USkeleton class="h-[20px] w-[123px] rounded-lg" />
-    <USkeleton class="h-[30px] w-[153px] rounded-lg" />
-    <div class="flex flex-row gap-2 w-full mt-12">
-      <USkeleton class="h-[100px] w-[100px] rounded-lg" />
-      <USkeleton class="h-[30px] w-[100px] rounded-lg" />
+  <div class="page-bg">
+    <div class="progress-page" v-if="!loading">
+      <ProgressNav @updateSection="updateSection" />
+      <ProgressSection :selectedSection="section" @updateGrade="updateGrade" />
+    </div>
+    <div v-else class="flex flex-col gap-4 w-full items-center justify-center">
+      <USkeleton class="h-[62px] w-[433px] rounded-lg bg-[#ECEFF2]" />
+      <USkeleton class="h-[100px] w-[433px] rounded-lg bg-[#ECEFF2]" />
+      <USkeleton class="h-[30px] w-[103px] rounded-lg bg-[#ECEFF2]" />
+      <USkeleton class="h-[1px] w-[80%] rounded-lg bg-[#ECEFF2]" />
+      <USkeleton class="h-[20px] w-[123px] rounded-lg bg-[#ECEFF2]" />
+      <USkeleton class="h-[30px] w-[153px] rounded-lg bg-[#ECEFF2]" />
+      <div class="flex flex-row gap-2 w-full mt-12">
+        <USkeleton class="h-[100px] w-[100px] rounded-lg bg-[#ECEFF2]" />
+        <USkeleton class="h-[30px] w-[100px] rounded-lg bg-[#ECEFF2]" />
+      </div>
     </div>
   </div>
 </template>
@@ -59,6 +60,10 @@ export default {
 </script>
 
 <style scoped>
+.page-bg {
+  background-color: #F2F8FC;
+  min-height: 100vh;
+}
 .progress-page {
   display: flex;
   flex-direction: column;
@@ -86,12 +91,5 @@ export default {
   width: 100%;
   height: 1px;
   background-color: #bbbbbb;
-}
-
-.loading-indicator {
-  text-align: center;
-  font-size: 16px;
-  color: #747474;
-  margin-top: 20px;
 }
 </style>
