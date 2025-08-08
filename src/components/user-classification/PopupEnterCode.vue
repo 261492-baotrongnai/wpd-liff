@@ -18,13 +18,15 @@
       <div class="input-container">
         <input
           type="text"
-          placeholder="กรุณากรอกรหัส เช่น ABC-123"
+          placeholder="ใส่รหัส เช่น ABC-12-345"
           v-model="code"
           :class="{ 'text-input': true, 'input-error': showError }"
-          maxlength="7"
+          maxlength="10"
           @input="formatCode"
         />
-        <p class="error-message" v-show="!!showError || codeError">{{ showError }}</p>
+        <p class="error-message" :class="{ hidden: !showError && !codeError }">
+          {{ showError }}
+        </p>
       </div>
 
       <button @click="submitCode" class="enter-code-button" :disabled="!code.trim()">ยืนยัน</button>
@@ -60,23 +62,9 @@ export default {
   },
   methods: {
     async submitCode() {
-      const codeParts = this.code.split('-')
-      const firstPart = codeParts[0]
-      const secondPart = codeParts[1]
-
-      const firstIsAlpha = /^[A-Z]{3}$/.test(firstPart)
-      const secondIsNum = /^[0-9]{3}$/.test(secondPart)
-
-      if (!firstIsAlpha && !secondIsNum) {
-        this.showError = 'กรุณากรอกตัวอักษร 3 ตัว และตัวเลข 3 ตัว เช่น ABC-123'
-        return
-      }
-      if (!firstIsAlpha) {
-        this.showError = 'กรุณากรอก 3 ตัวแรกเป็นตัวอักษรภาษาอังกฤษเท่านั้น'
-        return
-      }
-      if (!secondIsNum) {
-        this.showError = 'กรุณากรอก 3 ตัวสุดท้ายเป็นตัวเลขเท่านั้น'
+      const codePattern = /^[A-Z]{3}-\d{2}-\d{3}$/
+      if (!codePattern.test(this.code)) {
+        this.showError = 'กรุณาใส่อักษรอังกฤษ 3 ตัวแรก ตามด้วยตัวเลข 5 ตัว เช่น ABC-12-345'
         return
       }
       this.showError = ''
@@ -117,11 +105,13 @@ export default {
     formatCode(e: Event) {
       const target = e.target as HTMLInputElement
       let val = target.value.toUpperCase().replace(/[^A-Z0-9]/g, '')
-      val = val.slice(0, 6)
+      val = val.slice(0, 8)
       const part1 = val.slice(0, 3)
-      const part2 = val.slice(3, 6)
+      const part2 = val.slice(3, 5)
+      const part3 = val.slice(5, 8)
       let formatted = part1
       if (part2.length > 0) formatted += '-' + part2
+      if (part3.length > 0) formatted += '-' + part3
       this.code = formatted
       this.showError = ''
     },
@@ -169,7 +159,7 @@ export default {
 }
 
 .head {
-  margin-top: 26px; /* ✅ center ทั้งซ้าย-ขวา */
+  margin-top: 26px;
   padding: 12px 10px;
   border-radius: 12px;
   background: #efe6ff;
@@ -291,16 +281,19 @@ export default {
   font-size: 16px;
   text-align: center;
   margin: 0;
-  margin-top: 5px;
+  margin-top: 10px;
   margin-bottom: 5px;
-  /* ✅ บังคับให้แสดงแค่ 1 บรรทัด */
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  height: 22px; /* ✅ ความสูงคงที่ */
+  height: 44px; /* ความสูงคงที่ */
   line-height: 22px;
+  white-space: pre-line;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transition: opacity 0.2s;
 }
-.error-message[style*='display: none'] {
+.error-message.hidden {
   opacity: 0;
+  /* visibility: hidden;  ไม่ต้องใส่ */
 }
 </style>
