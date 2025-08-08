@@ -63,7 +63,7 @@ export async function getTodayMeals(): Promise<Meal[] | undefined> {
 }
 
 export async function getTodayMealsAndStats(): Promise<
-  { meals: Meal[]; stats: MealStats } | undefined
+  { meals: Meal[]; stats: MealStats; formattedMeals: TimeMeal[] | null } | undefined
 > {
   try {
     const response = await apiService.get<{ meals: Meal[]; stats: MealStats }>(`/meals/today/stats`)
@@ -80,17 +80,48 @@ export async function getTodayMealsAndStats(): Promise<
     const mealOrder = ['breakfast', 'lunch', 'dinner', 'snack']
     response.meals.sort((a, b) => mealOrder.indexOf(a.mealType) - mealOrder.indexOf(b.mealType))
 
-    console.log('Today progress:', response)
+    const formattedMeals = await formatMealInfoForCard(response.meals)
 
-    return { meals: response.meals, stats: response.stats }
+    return { meals: response.meals, stats: response.stats, formattedMeals }
   } catch (error) {
     console.error('Error fetching today progress:', error)
   }
 }
 
+export type TimeMeal = {
+  time: string
+  meals: Meal[]
+}
+
+export async function formatMealInfoForCard(meals: Meal[]): Promise<TimeMeal[] | null> {
+  try {
+    if (!meals || meals.length === 0) {
+      console.warn('No meals found for formatting')
+      throw new Error('No meals to format')
+    }
+    const timeMeals: Record<string, Meal[]> = {}
+    meals.forEach((meal) => {
+      const mealTime = new Date(meal.createdAt).toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false, // Use 24-hour format
+      })
+      if (!timeMeals[mealTime]) {
+        timeMeals[mealTime] = []
+      }
+      timeMeals[mealTime].push(meal)
+    })
+
+    return Object.entries(timeMeals).map(([time, meals]) => ({ time, meals }))
+  } catch (error) {
+    console.error('Error formatting meal info for card:', error)
+    return null
+  }
+}
+
 export async function getDayMealsAndStats(
   date: string,
-): Promise<{ meals: Meal[]; stats: MealStats } | undefined> {
+): Promise<{ meals: Meal[]; stats: MealStats; formattedMeals: TimeMeal[] | null } | undefined> {
   try {
     const response = await apiService.get<{ meals: Meal[]; stats: MealStats }>(
       `/meals/day/stats?date=${date}`,
@@ -108,9 +139,9 @@ export async function getDayMealsAndStats(
     const mealOrder = ['breakfast', 'lunch', 'dinner', 'snack']
     response.meals.sort((a, b) => mealOrder.indexOf(a.mealType) - mealOrder.indexOf(b.mealType))
 
-    console.log('Day progress:', response)
+    const formattedMeals = await formatMealInfoForCard(response.meals)
 
-    return { meals: response.meals, stats: response.stats }
+    return { meals: response.meals, stats: response.stats, formattedMeals }
   } catch (error) {
     console.error('Error fetching today progress:', error)
   }

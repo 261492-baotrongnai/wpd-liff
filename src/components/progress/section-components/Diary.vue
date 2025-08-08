@@ -6,7 +6,7 @@
     @updateGrade="updateGrade"
   />
 
-  <div v-if="day && !loading" class="diary-wrapper px-4 ">
+  <div v-if="day && !loading" class="diary-wrapper px-4">
     <p class="date-header">
       {{
         modelValue
@@ -24,17 +24,20 @@
       }}
     </p>
 
-    <div v-for="meal in day.meals" :key="meal.id" class="meal-item">
-      <div
-        v-if="imageLoaded[meal.id]"
-        class="fixed-image"
-        :style="{ backgroundImage: `url(${meal.signedUrl})` }"
-      ></div>
-      <USkeleton v-else class="w-[100px] h-[100px]" />
-      <div class="flex flex-col">
-        <p>{{ mealTypeTranslations[meal.mealType] }}</p>
-        <p>{{ meal.foodNames }}</p>
-        <p>{{ meal.avgGrade }}</p>
+    <div v-for="time_sent in day.formattedMeals" :key="time_sent.time" class="meal-item">
+      <div>{{ time_sent.time }}</div>
+      <div v-for="meal in time_sent.meals" :key="meal.id" class="flex items-center gap-2">
+        <div
+          v-if="imageLoaded[meal.id]"
+          class="fixed-image"
+          :style="{ backgroundImage: `url(${meal.signedUrl})` }"
+        ></div>
+        <USkeleton v-else class="w-[100px] h-[100px]" />
+        <div class="flex flex-col">
+          <p>{{ mealTypeTranslations[meal.mealType] }}</p>
+          <p>{{ meal.foodNames }}</p>
+          <p>{{ meal.avgGrade }}</p>
+        </div>
       </div>
     </div>
     <div class="share-container">
@@ -60,6 +63,7 @@ import {
   getTodayMealsAndStats,
   getDayMealsAndStats,
   getAllProgress,
+  type TimeMeal,
 } from '../../../services/progress.service'
 import DatePicker from './DatePicker.vue'
 import ShareButton from './ShareButton.vue'
@@ -83,7 +87,9 @@ const mealTypeTranslations: Record<string, string> = {
 }
 
 const loading = shallowRef(false)
-const day = shallowRef<{ meals: Meal[]; stats: MealStats } | null | undefined>(null)
+const day = shallowRef<
+  { meals: Meal[]; stats: MealStats; formattedMeals: TimeMeal[] | null } | null | undefined
+>(null)
 const dateExists = shallowRef<{ date: string; grade: string }[] | undefined>(undefined)
 const df = new DateFormatter('th-TH', { dateStyle: 'full' })
 const modelValue = shallowRef(
@@ -172,7 +178,7 @@ export default {
   font-weight: 400;
   line-height: 32px; /* 160% */
   letter-spacing: 0.2px;
-  margin:20px 0 20px 16px;
+  margin: 20px 0 20px 16px;
 }
 .meal-item {
   display: flex;
