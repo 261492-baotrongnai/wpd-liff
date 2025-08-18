@@ -189,10 +189,6 @@ export default {
   },
 
   async mounted() {
-    // MOCK ข้อมูลสำหรับ dev
-    // this.candidates = ['ข้าวผัดหมู', 'ส้มตำปูปลาร้า', 'ข้าวต้ม', 'ผัดไทย']
-    // this.loading = false
-    // ถ้าต้องการใช้ API จริง ให้ comment ส่วน mock ข้างบน แล้วใช้โค้ดนี้แทน
     await initializeLiff('VITE_LIFF_ID_MENU_INPUT')
     await getMenuCandidates().then((candidates) => {
       this.candidates = candidates
@@ -333,33 +329,43 @@ export default {
   box-sizing: border-box;
 }
 
-.submit-button {
-  color: #333333;
-  border: none;
-  border-radius: 5px;
-  width: 257px;
-  height: 55px;
-  margin-top: 39px;
-  text-align: center;
-  position: relative;
-  background-image: url('../../assets/menu-input/save.svg');
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 257px 55px; /* ปรับขนาดตามต้องการ */
-  text-align: center;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  gap: 10px;
-}
-
-.submit-button-wrapper {
+.submit-button-wrapper{
   width: 100%;
   max-width: 350px;
   margin-top: 20px;
+  display: flex;
+  justify-content: center;  /* จัดปุ่มให้อยู่กลาง */
+}
+
+.submit-button{
+  /* ขนาด + พื้นหลังตามที่ขอ */
+  width: 257px;
+  height: 55px;
+  flex-shrink: 0;
+  border-radius: 15px;
+  background: #D2ECC0;
+  box-shadow: -4px -4px 2px 0 #CCE5BB inset, 4px 4px 2px 0 #E0F0D5 inset;
+
+  /* โครงสร้างปุ่ม */
+  border: 0;
+  color: #333333;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: transform .06s ease, box-shadow .2s ease, filter .2s ease;
+}
+
+/* เอฟเฟกต์เล็กน้อย */
+.submit-button:hover{ filter: brightness(1.02); }
+.submit-button:active{
+  transform: translateY(1px);
+  box-shadow: -2px -2px 1px 0 #CCE5BB inset, 2px 2px 1px 0 #E0F0D5 inset;
+}
+.submit-button:focus-visible{
+  outline: 2px solid #19467833;
+  outline-offset: 2px;
 }
 
 .save-text {

@@ -1,12 +1,143 @@
 <template>
+  <!-- Date Picker เลือกวันที่ -->
+  <div ref="sentinel" aria-hidden="true" style="height: 1px"></div>
+
   <DatePicker
     :modelValue="modelValue"
     :dateExists="dateExists"
     @update:modelValue="onModelValueUpdate"
     @updateGrade="updateGrade"
   />
+  <!-- ถ้ามีข้อมูลมื้ออาหาร -->
+  <div v-if="day && !loading && day.meals && day.meals.length > 0" class="diary-wrapper px-4">
+    <!-- หัววันที่ -->
+    <p class="date-header">
+      {{
+        modelValue
+          ? isToday(modelValue)
+            ? 'วันนี้, ' +
+              df
+                .format(modelValue.toDate(getLocalTimeZone()))
+                .replace(/^วัน[^0-9]* /, '') // ลบคำว่า "วัน..."
+                .replace('พ.ศ. ', '') // ลบ "พ.ศ."
+            : df
+                .format(modelValue.toDate(getLocalTimeZone()))
+                .replace('ที่ ', ', ') // เปลี่ยน "ที่" เป็น ","
+                .replace('พ.ศ. ', '') // ลบ "พ.ศ."
+          : 'Select a date'
+      }}
+    </p>
 
-  <div v-if="day && !loading" class="diary-wrapper px-4">
+    <!-- Timeline แสดงรายการมื้อ -->
+    <div class="timeline">
+      <div
+        v-for="it in timeline"
+        :key="String(it.key)"
+        class="timeline-item"
+        :class="{ 'is-last': it.isLast, 'has-badge': it.showTime }"
+      >
+        <!-- คอลัมน์เวลา -->
+        <div class="time-col">
+          <div v-if="it.showTime" class="time-badge">{{ it.time }} น.</div>
+        </div>
+
+        <!-- Bubble แสดงข้อมูลมื้อ -->
+        <div class="bubble bubble--left">
+          <div class="bubble-inner">
+            <!-- ชื่อมื้อ -->
+            <p class="bubble-title">{{ mealTypeTranslations[it.meal.mealType] }}</p>
+
+            <!-- รูปอาหาร -->
+            <div class="bubble-media">
+              <div
+                v-if="imageLoaded[it.meal.id]"
+                class="bubble-img"
+                :style="{ backgroundImage: `url(${it.meal.signedUrl})` }"
+                role="img"
+                :aria-label="it.meal.foodNames"
+              />
+              <USkeleton v-else class="w-[240px] h-[240px] rounded-[14px]" />
+            </div>
+
+            <!-- รายการอาหารในมื้อ -->
+            <p class="bubble-text">
+              <span v-for="(part, i) in it.meal.foodNames.split(',')" :key="i" class="food-chunk">
+                {{ part.trim() }}
+              </span>
+            </p>
+          </div>
+
+          <!-- แผงเกรด -->
+          <div
+            class="grade-panel"
+            :class="`grade-${(it.meal.avgGrade || 'NA').toString().toUpperCase()}`"
+          >
+            <div class="grade-score-nurse">
+              <!-- เลือกรูปพยาบาลตามเกรด -->
+              <img
+                v-if="it.meal.avgGrade === 'A'"
+                class="grade-illu"
+                src="../../../assets/progress/diary/nurse-a.png"
+              />
+              <img
+                v-else-if="it.meal.avgGrade === 'B'"
+                class="grade-illu"
+                src="../../../assets/progress/diary/nurse-b.png"
+              />
+              <img
+                v-else-if="it.meal.avgGrade === 'C'"
+                class="grade-illu"
+                src="../../../assets/progress/diary/nurse-c.png"
+              />
+
+              <!-- ข้อความเกรด -->
+              <div class="grade-score-col">
+                <span
+                  class="grade-label"
+                  :class="`grade-${(it.meal.avgGrade || 'NA').toString().toUpperCase()}`"
+                >
+                  เกรด
+                </span>
+                <span
+                  class="grade-score"
+                  :class="`grade-${(it.meal.avgGrade || 'NA').toString().toUpperCase()}`"
+                >
+                  {{ it.meal.avgGrade ?? '-' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ปุ่มแชร์ -->
+    <div class="share-container">
+      <DiaryShareButton
+        :date="modelValue ? modelValue.toDate(getLocalTimeZone()).toISOString().split('T')[0] : ''"
+        :meals="
+          (day?.meals ?? [])
+            .map((m) => ({
+              signedUrl: m.signedUrl,
+              name: m.foodNames,
+              grade: (['A', 'B', 'C'] as const).includes((m.avgGrade ?? '') as any)
+                ? (m.avgGrade as 'A' | 'B' | 'C')
+                : null,
+            }))
+            .filter(
+              (x): x is { signedUrl: string; name: string; grade: 'A' | 'B' | 'C' } => !!x.grade,
+            )
+        "
+      />
+    </div>
+  </div>
+
+  <!-- ถ้าวันนี้หรือวันที่เลือกไม่มีข้อมูล -->
+  <div
+    v-else-if="day && !loading && (!day.meals || day.meals.length === 0)"
+    class="diary-wrapper flex flex-col px-4"
+  >
+    <!-- หัววันที่ -->
     <p class="date-header">
       {{
         modelValue
@@ -24,27 +155,24 @@
       }}
     </p>
 
-    <div v-for="time_sent in day.formattedMeals" :key="time_sent.time" class="meal-item">
-      <div>{{ time_sent.time }}</div>
-      <div v-for="meal in time_sent.meals" :key="meal.id" class="flex items-center gap-2">
-        <div
-          v-if="imageLoaded[meal.id]"
-          class="fixed-image"
-          :style="{ backgroundImage: `url(${meal.signedUrl})` }"
-        ></div>
-        <USkeleton v-else class="w-[100px] h-[100px]" />
-        <div class="flex flex-col">
-          <p>{{ mealTypeTranslations[meal.mealType] }}</p>
-          <p>{{ meal.foodNames }}</p>
-          <p>{{ meal.avgGrade }}</p>
-        </div>
-      </div>
-    </div>
-    <div class="share-container">
-      <ShareButton />
+    <!-- ภาพ no data -->
+    <div class="flex-1 flex items-center justify-center" style="margin-top: -50px">
+      <img
+        v-if="isToday(modelValue)"
+        src="../../../assets/progress/diary/no-data-today.png"
+        alt="No data today"
+        class="no-data-today-img"
+      />
+      <img
+        v-else
+        src="../../../assets/progress/diary/no-data-selected-date.png"
+        alt="No data for selected date"
+        class="no-data-selected-date-img"
+      />
     </div>
   </div>
 
+  <!-- สถานะโหลดข้อมูล -->
   <div v-else class="flex flex-col gap-2">
     <USkeleton class="w-[170px] h-[25px] bg-[#ECEFF2]" />
     <div class="p-2 flex flex-row mt-2 gap-2">
@@ -58,7 +186,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, shallowRef } from 'vue'
+import { onMounted, shallowRef, computed } from 'vue'
 import {
   getTodayMealsAndStats,
   getDayMealsAndStats,
@@ -66,7 +194,7 @@ import {
   type TimeMeal,
 } from '../../../services/progress.service'
 import DatePicker from './DatePicker.vue'
-import ShareButton from './ShareButton.vue'
+import DiaryShareButton from './DiaryShareButton.vue'
 
 import {
   DateFormatter,
@@ -108,6 +236,8 @@ onMounted(async () => {
   if (day.value && day.value.stats) {
     updateGrade(day.value.stats.avgGrade)
   }
+
+  console.log(day.value)
   loading.value = false
   await handleImagesLoaded()
 })
@@ -159,6 +289,37 @@ function isToday(modelDate: CalendarDate): boolean {
     today.getDate() === model.getDate()
   )
 }
+
+type TimelineItem = {
+  key: string
+  time: string
+  meal: Meal
+  showTime: boolean
+  isLast: boolean
+}
+
+const timeline = computed<TimelineItem[]>(() => {
+  const result: TimelineItem[] = []
+  if (!day.value?.formattedMeals?.length) return result
+
+  // เรียงเวลาน้อย -> มาก (รองรับ "HH:mm")
+  const groups = [...day.value.formattedMeals].sort((a, b) => a.time.localeCompare(b.time))
+
+  groups.forEach((g, gi) => {
+    const meals = [...g.meals]
+    meals.forEach((m, mi) => {
+      result.push({
+        key: String(m.id),
+        time: String(g.time),
+        meal: m,
+        showTime: mi === 0, // โชว์เวลาเฉพาะบล็อกแรกของช่วงเวลาเดียวกัน
+        isLast: gi === groups.length - 1 && mi === meals.length - 1,
+      })
+    })
+  })
+
+  return result
+})
 </script>
 
 <script lang="ts">
@@ -168,9 +329,12 @@ export default {
 </script>
 
 <style scoped>
+.timeline {
+  position: relative;
+}
+
 .date-header {
   color: var(--main-text, #194678);
-
   /* Paragraph1 */
   font-family: 'Noto Looped Thai UI';
   font-size: 20px;
@@ -195,16 +359,507 @@ export default {
 }
 
 .diary-wrapper {
-  width: 100vw; /* กว้างเต็มจอ */
-  min-height: 100vh; /* สูงอย่างน้อยเต็มจอ */
-  background: #ffffff;
-  border-radius: 0; /* ถ้าไม่ต้องการขอบมน ให้เป็น 0 */
-  margin: 0; /* ไม่มี margin */
+  flex: 1 0 auto;
+  min-height: 0;
+  /* overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain; */
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  /* ฉากหลังขาว */
+  background: #fff;
+  border-radius: 35px 35px 0 0;
   box-sizing: border-box;
+  /* กันขอบล่าง (โดยเฉพาะ iPhone ที่มี safe area) */
+  /* padding-bottom: max(12px, env(safe-area-inset-bottom)); */
+  margin: 0; /* ไม่มี margin */
   position: relative;
   left: 50%;
   right: 50%;
   transform: translateX(-50%);
-  border-radius: 35px;
+}
+/* ===== Layout ต่อหนึ่งมื้อ ===== */
+/* ให้กริดยืดความสูงเท่ากัน (bubble สูงเท่าแถว) */
+.timeline-item {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  align-items: stretch; /* ยืดทั้งคอลัมน์ให้สูงเท่ากัน */
+  margin-bottom: 23px;
+  position: relative;
+  margin-left: 16px;
+}
+
+/* ===== เวลา + เส้นต่อ ===== */
+/* คอลัมน์เวลาให้ลอยอยู่เหนือเส้น */
+.time-col {
+  position: relative;
+  z-index: -1;
+}
+/* วาดเส้นตั้งเชื่อม “จากกลาง badge ของแถวนี้” ไป “ถึงกลาง badge ของแถวถัดไป” */
+.timeline-item .time-col::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  width: 2px;
+  background: #cfe0ff;
+  transform: translateX(-650%);
+  top: 0; /* ค่า default ถ้าไม่มี badge ในแถวนี้ */
+  bottom: -23px; /* ให้เลยลงมาตาม margin-bottom */
+  z-index: -1;
+}
+/* ถ้าแถวนั้นมี badge ให้เริ่มเส้นจากกึ่งกลาง badge */
+.timeline-item.has-badge .time-col::after {
+  top: calc(var(--badge-h, 34px) / 2);
+}
+
+/* แถวสุดท้าย “ไม่วาดเส้น” */
+.timeline-item.is-last .time-col::after {
+  display: none;
+}
+/* ขนาด badge (ใช้ร่วมกับ calc ด้านบน) */
+.time-badge {
+  --badge-h: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 11px 3px 13px;
+  border: 2px solid #cfe0ff;
+  color: #194678;
+  border-radius: 999px;
+  background: #f4f8ff;
+  font-family: 'Noto Looped Thai UI';
+  font-size: 16px;
+  line-height: 24px;
+}
+/* ===== Grade Score ===== */
+.grade-score.grade-A {
+  color: #3d8200;
+  text-align: center;
+  font-family: star;
+  font-size: 32px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 28px; /* 87.5% */
+  letter-spacing: 0.32px;
+}
+.grade-score.grade-B {
+  color: #777500;
+  text-align: center;
+  font-family: star;
+  font-size: 32px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 28px; /* 87.5% */
+  letter-spacing: 0.32px;
+}
+.grade-score.grade-C {
+  color: #7b4c49;
+  text-align: center;
+  font-family: star;
+  font-size: 32px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 28px; /* 87.5% */
+  letter-spacing: 0.32px;
+}
+/* ===== Grade Label ===== */
+.grade-label.grade-A {
+  color: #3d8200;
+  text-align: center;
+  font-family: star;
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 28px; /* 155.556% */
+  letter-spacing: 0.18px;
+}
+.grade-label.grade-B {
+  color: #777500;
+  text-align: center;
+  font-family: star;
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 28px; /* 155.556% */
+  letter-spacing: 0.18px;
+}
+.grade-label.grade-C {
+  color: #7b4c49;
+  text-align: center;
+  font-family: star;
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 28px; /* 155.556% */
+  letter-spacing: 0.18px;
+}
+.bubble-title {
+  margin: 0 0 10px;
+  text-align: center;
+  color: #194678;
+  font-family: 'Noto Looped Thai UI Medium';
+  font-size: 18px;
+  font-style: normal;
+  line-height: 28px; /* 155.556% */
+  letter-spacing: 0.18px;
+}
+.meal-main {
+  min-width: 0;
+}
+/* คำแต่ละชิ้นอยู่ติดกัน ไม่แตกกลางคำ */
+.bubble-text .food-chunk {
+  display: inline-block; /* สำคัญ: ทำให้เป็น 1 ก้อน */
+  white-space: nowrap; /* ไม่ตัดกลางคำ/วลี */
+  word-break: keep-all;
+}
+.bubble-text .food-chunk:only-child {
+  display: inline; /* ไม่ต้องเป็นก้อน */
+  white-space: normal; /* ให้ wrap ตามปกติ */
+  word-break: normal; /* ไทยตัดตามพจนานุกรม */
+  line-break: auto;
+  overflow-wrap: anywhere; /* กันเคสยาวมาก ๆ */
+}
+/* เติม ", " หลังทุกชิ้น ยกเว้นตัวสุดท้าย
+   และเปิดโอกาสให้ตัดบรรทัด "หลัง" จุลภาคได้ */
+.bubble-text .food-chunk:not(:last-child)::after {
+  content: ','; /* ขึ้นบรรทัดใหม่หลัง , */
+}
+@supports (overflow-wrap: anywhere) {
+  .bubble-text .food-chunk {
+    overflow-wrap: anywhere;
+  }
+}
+.bubble-text .food-chunk + .food-chunk {
+  margin-left: 0.35em; /* ใส่ช่องไฟด้วย margin ของตัวถัดไปแทน */
+}
+.grade-panel {
+  position: relative;
+  overflow: hidden;
+}
+/* หางสามเหลี่ยม */
+.bubble--left::after {
+  --tail-w: 20px; /* กว้างตาม Figma */
+  --tail-h: 20px; /* สูงตาม Figma */
+
+  content: '';
+  position: absolute;
+  border-top-left-radius: 10px;
+  left: calc(-1 * var(--tail-w)); /* ยื่นออกด้านซ้าย */
+  top: 0px; /* ปรับตำแหน่งแนวตั้งได้ */
+  width: var(--tail-w);
+  height: var(--tail-h);
+  background: #f1f7ff; /* สีเดียวกับบับเบิล */
+  /* สามเหลี่ยม: (ซ้ายบน) -> (ขวาบน) -> (ขวาล่าง) */
+  clip-path: polygon(0 0, 100% 0, 100% 100%);
+}
+.no-data-today-img {
+  width: 300px;
+  height: auto;
+}
+.no-data-selected-date-img {
+  width: 300px;
+  height: auto;
+}
+
+@media (min-width: 351px) {
+  /* ===== Bubble เป็น 2 คอลัมน์: เนื้อหา + แถบเกรด ===== */
+  .bubble {
+    --py: 16px;
+    --gap: 0px; /* ระยะที่อยากให้มีทั้งซ้ายและขวา (ตั้งเป็น 0 ก็ได้) */
+    --grade-w: clamp(72px, 22vw, 200px);
+
+    padding: var(--py) 0; /* ตัด padding ซ้าย/ขวาออก ไม่ให้มีผล */
+    display: grid;
+    grid-template-columns: var(--gap) minmax(0, 1fr) var(--grade-w);
+    column-gap: 0; /* ไม่ต้องมีช่องว่างเพิ่ม */
+    background: #f1f7ff;
+    border-radius: 0 10px 10px 10px;
+    color: #194678;
+    align-items: stretch;
+    position: relative;
+    top: 8px;
+    overflow: visible;
+  }
+
+  /* เนื้อในบับเบิล: ซ้ายรายละเอียด, ขวาเกรด */
+  .bubble-inner {
+    grid-column: 2;
+    --inner-w: clamp(120px, 48vw, 200px);
+    width: min(100%, var(--inner-w));
+    max-width: none;
+    margin-inline: auto;
+    justify-self: center; /* ชิดซ้ายในคอลัมน์ของตัวเอง */
+    z-index: 1;
+    padding: 0 8px; /* เพิ่ม padding ด้านบนและล่าง */
+  }
+
+  .bubble-media {
+    width: 100%;
+    min-width: 0; /* กันไม่ให้ดันคอลัมน์ */
+    display: flex;
+    justify-content: center;
+  }
+  .bubble-img {
+    display: block;
+    width: 100%;
+    max-width: 100px; /* หรือค่าที่ต้องการ */
+    aspect-ratio: 1 / 1;
+    background-size: cover;
+    background-position: center;
+    border-radius: 5px;
+  }
+  .bubble-text {
+    color: var(--main-text, #194678);
+    /* Paragraph2 */
+    font-family: 'Noto Looped Thai UI';
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 28px; /* 155.556% */
+    letter-spacing: 0.18px;
+    margin: 12px 0 0;
+    text-align: center;
+    white-space: normal;
+    word-break: normal; /* ยอมให้ตัดตามพจนานุกรมของภาษาไทย */
+    line-break: auto;
+    text-wrap: wrap;
+  }
+
+  /* ===== Grade Panel ===== */
+  .grade-panel {
+    --illu-h: clamp(100px, 12vw, 120px);
+    --gap: 0px;
+    margin-top: calc(-1 * var(--py)); /* ให้เริ่มตั้งแต่ขอบบน bubble */
+    margin-bottom: calc(-1 * var(--py)); /* และจบถึงขอบล่าง bubble */
+    grid-column: 3;
+    align-self: stretch; /* สูงเท่าบับเบิล */
+    justify-self: stretch; /* <<< สำคัญ: ยืดเต็มความกว้างคอลัมน์ */
+    border-radius: 0 10px 10px 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+    z-index: 0;
+    /* ตัวแปรพื้นฐาน */
+    --decor-size-a: clamp(50px, 45%, 100px); /* ขนาดวงโค้ง ตามความกว้างกล่อง */
+    --decor-size-b: clamp(70px, 45%, 90px); /* ขนาดวงโค้ง ตามความกว้างกล่อง */
+    --decor-offset: 50%; /* ระยะดันออกนอกขอบ */
+    background: var(--grade-bg); /* พื้นหลังหลักของเกรด */
+  }
+  .grade-panel::before,
+  .grade-panel::after {
+    content: '';
+    position: absolute;
+    aspect-ratio: 1 / 1;
+    background-repeat: no-repeat;
+    background-size: contain;
+    pointer-events: none;
+    z-index: 0; /* อยู่หลังข้อความ */
+  }
+
+  /* มุมซ้ายบน */
+  .grade-panel::before {
+    width: var(--decor-size-a);
+    top: 0;
+    left: 0;
+    background-image: var(--ring1);
+    transform: translate(-var(--decor-offset), -var(--decor-offset));
+  }
+
+  /* มุมขวาล่าง */
+  .grade-panel::after {
+    width: var(--decor-size-b);
+    right: 0;
+    bottom: 80px;
+    background-image: var(--ring2);
+    transform: translate(var(--decor-offset), var(--decor-offset));
+  }
+  .grade-panel.grade-A {
+    --ring1: url('../../../assets/progress/diary/green1.png');
+    --ring2: url('../../../assets/progress/diary/green2.png');
+    background: linear-gradient(180deg, #e9ffd5 0%, #d2f3b5 100%);
+  }
+
+  .grade-panel.grade-B {
+    --ring1: url('../../../assets/progress/diary/yellow1.png');
+    --ring2: url('../../../assets/progress/diary/yellow2.png');
+    background: linear-gradient(180deg, #fff9c4 0%, #fff59a 100%);
+  }
+
+  .grade-panel.grade-C {
+    --ring1: url('../../../assets/progress/diary/red1.png');
+    --ring2: url('../../../assets/progress/diary/red2.png');
+    background: linear-gradient(180deg, #ffd0cd 0%, #ffa8a3 100%);
+  }
+  .grade-score-col {
+    position: absolute;
+    left: 50%;
+    top: calc((100% - var(--illu-h) - var(--gap)) / 2);
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    z-index: 2; /* อยู่เหนือภาพ */
+  }
+  .grade-illu {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%);
+    height: var(--illu-h);
+    z-index: 2; /* อยู่เหนือภาพ */
+  }
+}
+
+/* มือถือแคบ: เกรดลงล่าง */
+@media (max-width: 350px) {
+  /* คอลัมน์เดียว + จัดกึ่งกลาง */
+  .bubble-inner {
+    grid-template-columns: 1fr;
+    justify-items: center; /* กึ่งกลางแนวนอนของทุก child */
+    text-align: center;
+  }
+  .bubble {
+    margin-top: 5px;
+    padding: 16px 10px 0 10px;
+    position: relative; /* ให้ ::after ยึดกับกล่องนี้ */
+    display: flex;
+    height: 100%;
+    background: #f1f7ff; /* คืนพื้นหลัง */
+    border-radius: 0 10px 10px 10px; /* มุมโค้ง */
+    color: #194678;
+    z-index: 1; /* ให้อยู่เหนือเส้น timeline */
+    flex-direction: column;
+    overflow: visible;
+  }
+  .bubble-text {
+    color: var(--main-text, #194678);
+    /* Paragraph2 */
+    font-family: 'Noto Looped Thai UI';
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 28px; /* 155.556% */
+    letter-spacing: 0.18px;
+    margin: 10px 0 10px 0;
+    text-align: center;
+    white-space: normal;
+    word-break: normal; /* ยอมให้ตัดตามพจนานุกรมของภาษาไทย */
+    line-break: auto;
+    text-wrap: wrap;
+  }
+  /* คำแต่ละชิ้นอยู่ติดกัน ไม่แตกกลางคำ */
+  .bubble-text .food-chunk {
+    white-space: nowrap;
+  }
+  .bubble-text .food-chunk:not(:last-child)::after {
+    content: ',';
+    white-space: normal;
+  }
+  .bubble-media {
+    min-width: 110px;
+    max-width: 110px;
+    width: 110px;
+    justify-content: center;
+  }
+  .bubble-img {
+    min-width: 110px;
+    max-width: 110px;
+    width: 110px;
+    aspect-ratio: 1 / 1;
+    height: 110px;
+    background-size: cover;
+    background-position: center;
+    border-radius: 5px;
+    display: block;
+  }
+  .grade-panel {
+    isolation: isolate;
+    border-radius: 0 0 10px 10px;
+    width: calc(100% + 20px);
+    margin-left: -10px;
+    margin-bottom: -5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0px;
+    --decor-size-a: clamp(30px, 58%, 40px); /* มุมซ้ายบน */
+    --decor-size-b: clamp(40px, 62%, 60px); /* มุมขวาล่าง */
+    --decor-offset: 38%;
+    background: var(--grade-bg); /* พื้นหลังหลักของเกรด */
+  }
+  /* พื้นหลังวงโค้ง */
+  .grade-panel::before,
+  .grade-panel::after {
+    content: '';
+    position: absolute;
+    width: var(--decor-size-a); /* (::after จะใช้ var(--decor-size-b)) */
+    aspect-ratio: 1/1;
+    background-repeat: no-repeat;
+    background-size: contain;
+    z-index: 0; /* อยู่หลังข้อความ/รูป */
+    pointer-events: none;
+  }
+
+  /* มุมซ้ายบน – ชดเชยระยะ margin ที่ดึงพาเนลขึ้น */
+  .grade-panel::before {
+    top: 20px; /* <<< ชดเชย */
+    left: 20px;
+    width: var(--decor-size-a);
+    background-image: var(--ring1);
+    transform: translate(-50%, -50%) rotate(90deg); /* ชิดมุม ไม่ต้องกำหนด px เอง */
+  }
+
+  /* มุมขวาล่าง – ชดเชยฝั่งล่าง */
+  .grade-panel::after {
+    right: 30px;
+    bottom: 0px; /* <<< ชดเชย */
+    width: var(--decor-size-b);
+    background-image: var(--ring2);
+    transform: translate(50%, 50%) rotate(90deg);
+  }
+
+  /* เลือกรูปตามเกรด (ชุดสำหรับหน้าจอเล็ก) */
+  .grade-panel.grade-A {
+    --ring1: url('../../../assets/progress/green1.png');
+    --ring2: url('../../../assets/progress/green2.png');
+    background: linear-gradient(180deg, #e9ffd5 0%, #d2f3b5 100%);
+  }
+  .grade-panel.grade-B {
+    --ring1: url('../../../assets/progress/yellow1.png');
+    --ring2: url('../../../assets/progress/yellow2.png');
+    background: linear-gradient(180deg, #fff9c4 0%, #fff59a 100%);
+  }
+  .grade-panel.grade-C {
+    --ring1: url('../../../assets/progress/red1.png');
+    --ring2: url('../../../assets/progress/red2.png');
+    background: linear-gradient(180deg, #ffd0cd 0%, #ffa8a3 100%);
+  }
+
+  .grade-score-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px; /* ระยะห่างระหว่าง label กับ score */
+    padding-bottom: 15px;
+    z-index: 2;
+  }
+  .grade-score-nurse {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end; /* ให้ทุกอย่างชิดขอบล่าง */
+    justify-content: center;
+    gap: 15px;
+    padding-top: 10px;
+    height: 100%; /* ให้ row สูงเต็มกล่อง */
+  }
+
+  .grade-illu {
+    margin-bottom: 0px;
+    height: 70px;
+    z-index: 2;
+  }
 }
 </style>

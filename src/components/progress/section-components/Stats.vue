@@ -1,7 +1,12 @@
 <template>
   <SummaryFlex type="day" :stats="today" />
+  <StatShareButton />
+  <div class="separator"></div>
   <SummaryFlex type="week" :stats="week" />
+  <StatShareButton />
+  <div class="separator"></div>
   <SummaryFlex type="month" :stats="month" />
+  <StatShareButton />
 </template>
 
 <script lang="ts">
@@ -18,6 +23,9 @@ export default {
   components: {
     SummaryFlex,
   },
+  emits: {
+    updateGrade: (g: string) => typeof g === 'string',
+  },
   data() {
     return {
       today: undefined as MealStats | undefined,
@@ -29,8 +37,17 @@ export default {
     this.today = await getTodaySummary()
     this.week = await getWeekSummary()
     this.month = await getMonthSummary()
+    const grade = this.today?.avgGrade ?? this.week?.avgGrade ?? this.month?.avgGrade
+    if (grade) this.$emit('updateGrade', grade)
   },
 }
 </script>
 
-<style></style>
+<style>
+.separator {
+  height: 2px; /* กำหนดความหนาของเส้น */
+  background-color: #eceff2; /* สีเส้น */
+  border-radius: 9999px; /* ทำให้ปลายโค้งมน */
+  margin: 30px 20px; /* ระยะขอบซ้ายขวาเท่ากับคอนเทนต์ */
+}
+</style>
