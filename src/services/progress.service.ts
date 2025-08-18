@@ -101,7 +101,7 @@ export async function formatMealInfoForCard(meals: Meal[]): Promise<TimeMeal[] |
     }
     const timeMeals: Record<string, Meal[]> = {}
     meals.forEach((meal) => {
-      const mealTime = new Date(meal.createdAt).toLocaleTimeString([], {
+      const mealTime = new Date(meal.createdAt).toLocaleTimeString('th-TH', {
         hour: '2-digit',
         minute: '2-digit',
         hour12: false, // Use 24-hour format

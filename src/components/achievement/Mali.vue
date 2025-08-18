@@ -89,6 +89,7 @@ export default {
           color: '#3f51b5',
           image: level5Image,
         },
+        
       ],
     }
   },
