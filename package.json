@@ -23,6 +23,8 @@
     "@phosphor-icons/vue": "^2.2.1",
     "@tailwindcss/vite": "^4.1.4",
     "fs": "^0.0.1-security",
+    "html2canvas": "^1.4.1",
+    "lucide-vue-next": "^0.539.0",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"
   },

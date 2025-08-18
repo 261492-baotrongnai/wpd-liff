@@ -1,7 +1,7 @@
 <template>
   <div class="page-bg">
     <div class="progress-page" v-if="!loading">
-      <ProgressNav @updateSection="updateSection" />
+      <ProgressNav  @updateSection="updateSection" />
       <ProgressSection :selectedSection="section" @updateGrade="updateGrade" />
     </div>
     <div v-else class="flex flex-col gap-4 w-full items-center justify-center">
@@ -60,14 +60,30 @@ export default {
 </script>
 
 <style scoped>
+html,
+body,
+#app {
+  height: 100svh;
+  margin: 0;
+}
+* {
+  box-sizing: border-box;
+}
 .page-bg {
-  background-color: #F2F8FC;
-  min-height: 100vh;
+  background-color: #f2f8fc;
+  min-height: 100dvh;
+  overflow-x: hidden;
 }
 .progress-page {
+  height: 100vh; /* ให้เต็ม viewport */
+  max-height: 100svh;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 13px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  position: relative;
 }
 .share-button {
   background-color: #b5e1c2;
