@@ -1,15 +1,37 @@
+<!-- Stat.vue -->
 <template>
   <SummaryFlex type="day" :stats="today" />
-  <StatShareButton />
+  <StatShareButton
+    type="day"
+    :stats="today"
+    :profile-name="profile?.displayName"
+    :profile-image="profile?.pictureUrl"
+  />
+
   <div class="separator"></div>
+
   <SummaryFlex type="week" :stats="week" />
-  <StatShareButton />
+  <StatShareButton
+    type="week"
+    :stats="week"
+    :profile-name="profile?.displayName"
+    :profile-image="profile?.pictureUrl"
+  />
+
   <div class="separator"></div>
+
   <SummaryFlex type="month" :stats="month" />
-  <StatShareButton />
+  <StatShareButton
+    type="month"
+    :stats="month"
+    :profile-name="profile?.displayName"
+    :profile-image="profile?.pictureUrl"
+  />
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
+defineOptions({ name: 'ProgressStats' })
+import { ref, onMounted } from 'vue'
 import type { MealStats } from '../../../types/meal.types'
 import {
   getMonthSummary,
@@ -17,37 +39,61 @@ import {
   getWeekSummary,
 } from '../../../services/progress.service'
 import SummaryFlex from './SummaryFlex.vue'
+import StatShareButton from './StatShareButton.vue'
+import liff from '@line/liff'
 
-export default {
-  name: 'StatsPage',
-  components: {
-    SummaryFlex,
-  },
-  emits: {
-    updateGrade: (g: string) => typeof g === 'string',
-  },
-  data() {
-    return {
-      today: undefined as MealStats | undefined,
-      week: undefined as MealStats | undefined,
-      month: undefined as MealStats | undefined,
+// รับ props สำหรับข้อมูล profile จาก parent component
+// defineProps<{
+//   profileName?: string
+//   profileImage?: string
+// }>()
+
+const emit = defineEmits<{
+  updateGrade: [grade: string]
+}>()
+
+const today = ref<MealStats | undefined>(undefined)
+const week = ref<MealStats | undefined>(undefined)
+const month = ref<MealStats | undefined>(undefined)
+const profile = ref<
+  | {
+      displayName: string
+      pictureUrl: string
+      statusMessage: string
+      userId: string
     }
-  },
-  async mounted() {
-    this.today = await getTodaySummary()
-    this.week = await getWeekSummary()
-    this.month = await getMonthSummary()
-    const grade = this.today?.avgGrade ?? this.week?.avgGrade ?? this.month?.avgGrade
-    if (grade) this.$emit('updateGrade', grade)
-  },
-}
+  | undefined
+>(undefined)
+
+onMounted(async () => {
+  try {
+    profile.value = (await liff.getProfile()) as {
+      displayName: string
+      pictureUrl: string
+      statusMessage: string
+      userId: string
+    }
+    console.log('User profile:', profile)
+    today.value = await getTodaySummary()
+    week.value = await getWeekSummary()
+    month.value = await getMonthSummary()
+
+    // ส่ง grade กลับไปยัง parent component
+    const grade = today.value?.avgGrade ?? week.value?.avgGrade ?? month.value?.avgGrade
+    if (grade) {
+      emit('updateGrade', grade)
+    }
+  } catch (error) {
+    console.error('Error loading stats:', error)
+  }
+})
 </script>
 
-<style>
+<style scoped>
 .separator {
-  height: 2px; /* กำหนดความหนาของเส้น */
-  background-color: #eceff2; /* สีเส้น */
-  border-radius: 9999px; /* ทำให้ปลายโค้งมน */
-  margin: 30px 20px; /* ระยะขอบซ้ายขวาเท่ากับคอนเทนต์ */
+  height: 2px;
+  background-color: #eceff2;
+  border-radius: 9999px;
+  margin: 30px 20px;
 }
 </style>

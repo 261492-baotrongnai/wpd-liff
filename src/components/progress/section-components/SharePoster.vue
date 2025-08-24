@@ -1,18 +1,27 @@
+<!-- SharePoster.vue -->
 <template>
-  <!-- ขนาดโปสเตอร์แนะนำ: อัตราส่วน 3:4 -->
   <div ref="root" class="poster">
-    <div class="poster-header">
-      <div class="app-badge">หวานพอดี</div>
-      <div class="date">{{ displayDate }}</div>
-      <div class="title">ภาพรวมมื้ออาหาร</div>
-    </div>
+    <div class="poster-bg" aria-hidden="true"></div>
 
-    <div class="meals">
-      <div v-for="(m, i) in meals" :key="i" class="meal-card">
-        <div class="grade" :class="'grade-' + m.grade">{{ m.grade }}</div>
-        <!-- ใช้ <img> เพื่อให้ html2canvas ดึงรูปได้ และใส่ crossorigin -->
-        <img :src="m.signedUrl" crossorigin="anonymous" class="thumb" />
-        <div class="name">{{ m.name }}</div>
+    <div class="poster-inner">
+      <div class="poster-header">
+        <div class="title">ภาพรวมมื้ออาหาร</div>
+        <div class="date">{{ displayDate }}</div>
+      </div>
+
+      <div class="meals">
+        <div v-for="(m, i) in meals" :key="m.signedUrl || i" class="meal-card">
+          <div class="grade grade-text" :class="'grade-' + m.grade">{{ m.grade }}</div>
+
+          <div
+            class="thumb-box"
+            :style="{ backgroundImage: `url(${m.signedUrl})` }"
+            role="img"
+            :aria-label="m.name"
+          />
+          <!-- ใช้ชื่อที่ถูกตัดตามจำนวนตัวอักษร: ถ้ายาวเกิน MAX_CHARS ตัด 4 ตัวท้าย แล้วเติม ... -->
+          <div class="name" :title="m.name">{{ cutByChars(m.name) }}</div>
+        </div>
       </div>
     </div>
   </div>
@@ -20,23 +29,27 @@
 
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
-import bgUrl from '@/assets/progress/stat/poster-bg.png'
-const cssBg = computed(() => `url(${bgUrl})`)
+import bgUrl from '@/assets/progress/stat/poster-bg.jpg'
+
 type Grade = 'A' | 'B' | 'C'
 type PosterMeal = { signedUrl: string; name: string; grade: Grade }
 
 const props = defineProps<{ date: string; meals: PosterMeal[] }>()
 const root = ref<HTMLElement | null>(null)
 
+/* ===== helpers ===== */
+const cssBg = computed(() => `url(${bgUrl})`)
 const displayDate = computed(() => {
-  const d = new Date(props.date)
-  return d.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' })
+  if (!props.date) return ''
+  const [y, m, d] = props.date.split('-').map(Number)
+  const local = new Date(y, m - 1, d)
+  return local.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' })
 })
 
 function waitForImages(el: HTMLElement) {
   const imgs = Array.from(el.querySelectorAll('img')) as HTMLImageElement[]
   return Promise.all(
-    imgs.map(img =>
+    imgs.map((img) =>
       img.complete && img.naturalWidth > 0
         ? Promise.resolve()
         : new Promise<void>((resolve) => {
@@ -47,115 +60,226 @@ function waitForImages(el: HTMLElement) {
   )
 }
 
-async function downloadPng() {
-  if (!root.value) return
+async function recomputeForClone() {
+  const d = document as Document & { fonts?: FontFaceSet }
+  if (d.fonts?.ready) await d.fonts.ready
+  await new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
+}
+
+function canvasToBlob(
+  canvas: HTMLCanvasElement,
+  type: string = 'image/png',
+  quality?: number,
+): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('toBlob failed'))), type, quality)
+  })
+}
+
+async function renderToBlob(targetWidth = 1200): Promise<Blob> {
+  if (!root.value) throw new Error('poster root missing')
   await nextTick()
   await waitForImages(root.value)
+  const d = document as Document & { fonts?: FontFaceSet }
+  if (d.fonts?.ready) await d.fonts.ready
+
+  const TARGET_W = targetWidth
+  const TARGET_H = Math.round((TARGET_W * 4) / 3)
+
+  const clone = root.value.cloneNode(true) as HTMLElement
+  Object.assign(clone.style, {
+    width: `${TARGET_W}px`,
+    height: `${TARGET_H}px`,
+    position: 'fixed',
+    left: '-999999px',
+    top: '0',
+    maxWidth: 'none',
+    transform: 'none',
+    boxShadow: 'none',
+    zIndex: '-1',
+  } as CSSStyleDeclaration)
+  document.body.appendChild(clone)
+
+  await recomputeForClone()
 
   const { default: html2canvas } = await import('html2canvas')
-  const canvas = await html2canvas(root.value, {
-    useCORS: true,
-    backgroundColor: null,
-    scale: Math.min(3, window.devicePixelRatio || 2),
-  })
-  const link = document.createElement('a')
-  link.href = canvas.toDataURL('image/png')
-  link.download = `meals_${props.date}.png` 
-  link.click()
+  const canvas = await html2canvas(clone, { useCORS: true, backgroundColor: null, scale: 2 })
+  document.body.removeChild(clone)
+
+  return canvasToBlob(canvas)
 }
-defineExpose({ downloadPng })
+
+export type SharePosterExpose = { renderToBlob: (targetWidth?: number) => Promise<Blob> }
+defineExpose<SharePosterExpose>({ renderToBlob })
+
+/* ===== ตัดชื่อแบบ “ลบ 4 ตัวท้ายแล้วเติม … ถ้ายาวเกินขีดจำกัด” ===== */
+const MAX_CHARS = 13
+const REPLACE_TAIL = 3
+
+function cutByChars(name: string): string {
+  if (!name) return ''
+  const cleaned = name.replace(/\(.*?\)|\[.*?\]|（.*?）/g, '').trim()
+  if (cleaned.length <= MAX_CHARS) return cleaned
+  const keep = Math.max(0, MAX_CHARS - REPLACE_TAIL)
+  return cleaned.slice(0, keep) + '...'
+}
 </script>
 
-
 <style scoped>
-/* ขนาดรวมโปสเตอร์ */
-.poster{
-width: 600px;
-  aspect-ratio: 3 / 4;
-    width: 100%;
-  max-width: 600px;      /* กันแตกบนจอใหญ่ */
-  border-radius: 16px;
-  padding: 20px;
-  box-sizing: border-box;
-
-  /* ใช้ template BG จากไฟล์ — ผูกด้วย v-bind() */
+/* ===== โครงโปสเตอร์ (คงเดิม) ===== */
+.poster {
+  --pad: 20px;
+  --poster-w: min(900px, 80vw);
+  --card-max: 300px;
+  --gap-x: 80px;
+  --gap-y: 60px;
+  width: var(--poster-w);
+  aspect-ratio: 3/4;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+}
+.poster-bg {
+  position: absolute;
+  inset: 0;
   background-image: v-bind(cssBg);
   background-size: cover;
   background-position: center;
-  background-color: #f7fbff;
-
-  position: relative;
-  box-shadow: 0 12px 24px rgba(0,0,0,.08);
+}
+.poster-inner {
+  position: absolute;
+  inset: 40px;
+  display: flex;
+  flex-direction: column;
+}
+.poster-header {
+  text-align: left;
+  margin-top: -15px;
+}
+.title {
+  color: #386496;
+  font-family: 'Noto Looped Thai UI Medium';
+  font-size: 70px;
+  font-weight: 400;
+  padding-left: 25px;
+}
+.date {
+  padding-left: 25px;
+  color: #386496;
+  font-family: 'Noto Looped Thai UI';
+  font-size: 55px;
+  font-weight: 500;
 }
 
-.poster-header{
-  text-align: center;
-  margin-bottom: 8px;
-}
-.app-badge{
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: #E6F3FF;
-  color: #194678;
-  font-weight: 600;
-  font-size: 14px;
-}
-.date{
-  margin-top: 6px;
-  color: #194678;
-  font-size: 16px;
-}
-.title{
-  color: #194678;
-  font-size: 22px;
-  font-weight: 700;
-  margin-top: 2px;
-}
-
-/* การ์ดมื้ออาหาร */
-.meals{
-  margin-top: 14px;
+/* ===== การ์ด ===== */
+.meals {
+  padding-top: 180px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
+  column-gap: var(--gap-x);
+  row-gap: var(--gap-y);
+  max-width: calc(3 * var(--card-max) + var(--gap-x));
+  margin: 0 auto;
+  /* ไม่ต้องใส่ justify-content หรือ justify-items */
 }
-.meal-card{
-  background: #fff;
-  border-radius: 12px;
-  padding: 10px;
-  text-align: center;
-  box-shadow: 0 2px 6px rgba(25,70,120,.06);
-}
-.thumb{
+.meal-card {
+  --card-bg: #e6f2ff;
+  --card-bg-rgb: 230 242 255;
+  position: relative;
+  padding: 20px 30px;
   width: 100%;
-  aspect-ratio: 1/1;
-  object-fit: cover;
+  max-width: var(--card-max);
+  background-color: var(--card-bg);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+.thumb-box {
+  position: relative;
+  width: 100%;
+  padding-top: 100%;
+  overflow: hidden;
   border-radius: 8px;
+  border: 5px solid #f5faff;
+  background-size: cover;
+  background-position: center;
 }
-.name{
-  margin-top: 6px;
-  color: #194678;
-  font-size: 14px;
-  line-height: 1.25;
-  word-break: break-word;
+
+/* ===== ชื่อเมนู ===== */
+.meal-card .name {
+  margin-top: -5px;
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  margin-inline: auto;
+  padding: 0 10px;
+  color: #386496;
+  font-family: 'Noto Looped Thai UI';
+  font-size: 35px;
+  line-height: 2.3em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* กันเคสที่พื้นที่แคบมาก ๆ อีกชั้น */
+  position: relative;
 }
-.grade{
+
+/* ===== ป้ายเกรด (คงเดิม) ===== */
+.grade-A {
+  top: -25px;
+  right: -40px;
+  width: 85px;
+  height: 85px;
+  border-radius: 50%;
   position: absolute;
-  transform: translateY(-10px) translateX(6px);
-  min-width: 28px;
-  height: 28px;
-  padding: 0 8px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 14px;
-  color: #194678;
-  background: #f1f7ff;
+  background: #d7f4bc;
+  color: #3d8200;
+  margin: 0 20px 15px 20px;
+  padding: 0;
+  z-index: 2;
+  font-family: star;
+  font-size: 60px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 28px;
+  letter-spacing: 0.15px;
 }
-.grade-A{ background: #d2f3b5; }
-.grade-B{ background: #fff59a; }
-.grade-C{ background: #ffa8a3; }
+.grade-B {
+  top: -25px;
+  right: -40px;
+  width: 85px;
+  height: 85px;
+  border-radius: 50%;
+  position: absolute;
+  background: #fff59b;
+  color: #777500;
+  margin: 0 20px 15px 20px;
+  padding: 0;
+  z-index: 2;
+  font-family: star;
+  font-size: 60px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 28px;
+  letter-spacing: 0.15px;
+}
+.grade-C {
+  top: -25px;
+  right: -40px;
+  width: 85px;
+  height: 85px;
+  border-radius: 50%;
+  position: absolute;
+  background: #ffc7c4;
+  color: #7b4c49;
+  margin: 0 20px 15px 20px;
+  padding: 0;
+  z-index: 2;
+  font-family: star;
+  font-size: 60px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 28px;
+  letter-spacing: 0.15px;
+}
 </style>

@@ -42,7 +42,7 @@
         </div>
 
         <!-- Bubble แสดงข้อมูลมื้อ -->
-        <div class="bubble bubble--left">
+        <div class="bubble" :class="{ 'bubble--left': it.showTime }">
           <div class="bubble-inner">
             <!-- ชื่อมื้อ -->
             <p class="bubble-title">{{ mealTypeTranslations[it.meal.mealType] }}</p>
@@ -114,7 +114,7 @@
     <!-- ปุ่มแชร์ -->
     <div class="share-container">
       <DiaryShareButton
-        :date="modelValue ? modelValue.toDate(getLocalTimeZone()).toISOString().split('T')[0] : ''"
+        :date="shareDate"
         :meals="
           (day?.meals ?? [])
             .map((m) => ({
@@ -186,7 +186,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, shallowRef, computed } from 'vue'
+import { onMounted, shallowRef, computed, watchEffect } from 'vue'
 import {
   getTodayMealsAndStats,
   getDayMealsAndStats,
@@ -228,7 +228,23 @@ const modelValue = shallowRef(
     new Date().getDate(),
   ),
 )
-
+/** วันที่ส่งให้ปุ่มแชร์/SharePoster แบบ YYYY-MM-DD (ไม่ใช้ toISOString เพื่อกันเลื่อนวัน) */
+const shareDate = computed(() => {
+  if (!modelValue.value) return ''
+  const js = modelValue.value.toDate(getLocalTimeZone())
+  const y = js.getFullYear()
+  const m = String(js.getMonth() + 1).padStart(2, '0')
+  const d = String(js.getDate()).padStart(2, '0')
+  const ymd = `${y}-${m}-${d}`
+  console.log('[DiaryPage] shareDate ->', ymd, '| local:', js.toString(), '| iso:', js.toISOString())
+  return ymd
+})
+/** debug: ดูหัววันที่ที่กำลังจะแสดง */
+watchEffect(() => {
+  if (!modelValue.value) return
+  const js = modelValue.value.toDate(getLocalTimeZone())
+  console.log('[DiaryPage] header date preview ->', js.toString())
+})
 onMounted(async () => {
   loading.value = true
   dateExists.value = await getAllProgress()
@@ -270,11 +286,16 @@ async function handleImagesLoaded() {
 
 async function onModelValueUpdate(newValue: CalendarDate) {
   loading.value = true
-  const date = new Date(newValue.year - 543, newValue.month - 1, newValue.day + 1)
-  day.value = await getDayMealsAndStats(date.toISOString().split('T')[0])
-  if (day.value && day.value.stats) {
-    updateGrade(day.value.stats.avgGrade)
-  }
+
+  // แปลงเป็นวันที่แบบ local (ไม่บวกวัน)
+  const js = new Date(newValue.year - 543, newValue.month - 1, newValue.day)
+  const ymd = `${js.getFullYear()}-${String(js.getMonth() + 1).padStart(2, '0')}-${String(js.getDate()).padStart(2, '0')}`
+
+  console.log('[DiaryPage] fetch getDayMealsAndStats with ->', ymd, '| local:', js.toString(), '| iso:', js.toISOString())
+
+  day.value = await getDayMealsAndStats(ymd)
+  if (day.value?.stats) updateGrade(day.value.stats.avgGrade)
+
   modelValue.value = newValue
   loading.value = false
   await handleImagesLoaded()
@@ -510,6 +531,7 @@ export default {
   display: inline-block; /* สำคัญ: ทำให้เป็น 1 ก้อน */
   white-space: nowrap; /* ไม่ตัดกลางคำ/วลี */
   word-break: keep-all;
+  margin-top: 3px;
 }
 .bubble-text .food-chunk:only-child {
   display: inline; /* ไม่ต้องเป็นก้อน */
@@ -550,6 +572,9 @@ export default {
   background: #f1f7ff; /* สีเดียวกับบับเบิล */
   /* สามเหลี่ยม: (ซ้ายบน) -> (ขวาบน) -> (ขวาล่าง) */
   clip-path: polygon(0 0, 100% 0, 100% 100%);
+}
+.bubble:not(.bubble--left) {
+  border-top-left-radius: 10px;
 }
 .no-data-today-img {
   width: 300px;
@@ -622,6 +647,7 @@ export default {
     word-break: normal; /* ยอมให้ตัดตามพจนานุกรมของภาษาไทย */
     line-break: auto;
     text-wrap: wrap;
+    padding: 0 5px;
   }
 
   /* ===== Grade Panel ===== */
