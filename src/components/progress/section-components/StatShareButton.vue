@@ -53,6 +53,8 @@
 import { Download, Forward, X } from 'lucide-vue-next'
 import { ref, watch, nextTick, computed } from 'vue'
 import StatPoster, { type StatPosterExpose } from './StatPoster.vue'
+import liff from '@line/liff'
+import { uploadExportPoster } from '@/services/progress.service'
 
 type StatType = 'day' | 'week' | 'month'
 // type Grade = 'A' | 'B' | 'C'
@@ -136,7 +138,7 @@ watch(isOpen, async (open) => {
   }
 })
 
-function download() {
+async function download() {
   if (!previewUrl.value) return
 
   const filename = `stats_${props.type}_${currentDate.value.replace(/[\/\s:]/g, '-')}.png`
@@ -144,6 +146,23 @@ function download() {
   a.href = previewUrl.value
   a.download = filename
   a.click()
+
+  const blob = await (await fetch(previewUrl.value)).blob()
+  const file = new File(
+    [blob],
+    `stats_${props.type}_${currentDate.value.replace(/[\/\s:]/g, '-')}.png`,
+    { type: 'image/png' },
+  )
+  const uploadResponse = await uploadExportPoster(file, liff.getContext()?.userId || '')
+  console.log('uploadResponse', uploadResponse)
+  await liff.sendMessages([
+    {
+      type: 'text',
+      text: 'โปสเตอร์บันทึกอาหาร',
+    },
+  ])
+  console.log('Sent message')
+  liff.closeWindow()
 }
 </script>
 

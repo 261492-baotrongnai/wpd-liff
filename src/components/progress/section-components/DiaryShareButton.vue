@@ -18,7 +18,10 @@
     <template #body>
       <div class="preview-box">
         <img v-if="previewUrl" :src="previewUrl" class="preview-img" alt="Poster preview" />
-        <div v-else class="preview-skeleton">กำลังสร้างรูปภาพ  <br /> กรุณารอสักครู่นะคะ</div>
+        <div v-else class="preview-skeleton">
+          กำลังสร้างรูปภาพ <br />
+          กรุณารอสักครู่นะคะ
+        </div>
       </div>
       <!-- mount ตัวเรนเดอร์ออฟสกรีนไว้ แต่ไม่ต้องโชว์ -->
       <SharePoster
@@ -46,6 +49,8 @@
 import { Download, Forward, X } from 'lucide-vue-next'
 import { ref, watch, nextTick } from 'vue'
 import SharePoster, { type SharePosterExpose } from './SharePoster.vue'
+import liff from '@line/liff'
+import { uploadExportPoster } from '@/services/progress.service'
 
 const props = defineProps<{
   date: string
@@ -68,12 +73,28 @@ watch(isOpen, async (open) => {
   previewUrl.value = URL.createObjectURL(blob)
 })
 
-function download() {
+async function download() {
   if (!previewUrl.value) return
   const a = document.createElement('a')
   a.href = previewUrl.value
   a.download = `meals_${props.date}.png`
   a.click()
+
+  const blob = await (await fetch(previewUrl.value)).blob()
+  const file = new File([blob], `meals_${props.date}.png`, { type: 'image/png' })
+  const uploadResponse = await uploadExportPoster(
+    file,
+    liff.getContext()?.userId || '',
+  )
+  console.log('uploadResponse', uploadResponse)
+  await liff.sendMessages([
+    {
+      type: 'text',
+      text: 'โปสเตอร์บันทึกอาหาร',
+    },
+  ])
+  console.log('Sent message')
+  liff.closeWindow()
 }
 </script>
 

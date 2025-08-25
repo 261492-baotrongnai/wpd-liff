@@ -195,3 +195,16 @@ export async function getMonthSummary(): Promise<MealStats | undefined> {
   const response = await apiService.get<MealStats>(`/meals/month-summary`)
   return response
 }
+
+export async function uploadExportPoster(file: File, uid: string) {
+  const response = await apiService.post(
+    `/user-states/upload-export-poster`,
+    { file, uid },
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    },
+  )
+  return response
+}
