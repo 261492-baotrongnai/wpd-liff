@@ -17,6 +17,16 @@
       footer: 'z-[1001] border-gray-200 bg-white p-0 flex justify-center py-3 px-2',
     }"
   >
+    <!-- fullscreen loading overlay -->
+    <teleport to="body">
+      <div v-if="isLoading" class="loading-overlay" role="alert" aria-busy="true">
+        <div class="loading-box">
+          <span class="loading-spinner" aria-hidden="true"></span>
+          <div class="loading-text">กำลังส่งรูป <br/>ไปยังห้องแชต</div>
+        </div>
+      </div>
+    </teleport>
+
     <template #body>
       <div class="preview-box">
         <img v-if="previewUrl" :src="previewUrl" class="preview-img" alt="Stat poster preview" />
@@ -37,11 +47,17 @@
 
     <template #footer>
       <div class="actions">
-        <button type="button" class="send-button" :disabled="!previewUrl" @click="download">
-          ส่งรูปทางแชท <Forward class="icon" aria-hidden="true" />
+        <button
+          type="button"
+          class="send-button"
+          :disabled="!previewUrl || isLoading"
+          :class="{ 'is-disabled': !previewUrl || isLoading }"
+          @click="download"
+        >
+          ส่งรูปทางแชต <Forward class="icon" aria-hidden="true" />
         </button>
 
-        <button type="button" class="close-button" @click="isOpen = false">
+        <button type="button" class="close-button" :disabled="isLoading" @click="isOpen = false">
           ปิดหน้านี้ <X class="icon" aria-hidden="true" />
         </button>
       </div>
@@ -76,6 +92,7 @@ const props = defineProps<{
 const isOpen = ref(false)
 const posterRef = ref<StatPosterExpose | null>(null)
 const previewUrl = ref<string | null>(null)
+const isLoading = ref(false)
 
 // แก้ไข: สร้างวันที่ในรูปแบบที่ StatPoster ต้องการ
 const currentDate = computed(() => {
@@ -139,30 +156,40 @@ watch(isOpen, async (open) => {
 })
 
 async function download() {
-  if (!previewUrl.value) return
+  if (!previewUrl.value || isLoading.value) return
 
-  const filename = `stats_${props.type}_${currentDate.value.replace(/[\/\s:]/g, '-')}.png`
-  const a = document.createElement('a')
-  a.href = previewUrl.value
-  a.download = filename
-  a.click()
+  try {
+    isLoading.value = true
 
-  const blob = await (await fetch(previewUrl.value)).blob()
-  const file = new File(
-    [blob],
-    `stats_${props.type}_${currentDate.value.replace(/[\/\s:]/g, '-')}.png`,
-    { type: 'image/png' },
-  )
-  const uploadResponse = await uploadExportPoster(file, liff.getContext()?.userId || '')
-  console.log('uploadResponse', uploadResponse)
-  await liff.sendMessages([
-    {
-      type: 'text',
-      text: 'โปสเตอร์บันทึกอาหาร',
-    },
-  ])
-  console.log('Sent message')
-  liff.closeWindow()
+    const filename = `stats_${props.type}_${currentDate.value.replace(/[\/\s:]/g, '-')}.png`
+    const a = document.createElement('a')
+    a.href = previewUrl.value
+    a.download = filename
+    a.click()
+
+    const blob = await (await fetch(previewUrl.value)).blob()
+    const file = new File(
+      [blob],
+      `stats_${props.type}_${currentDate.value.replace(/[\/\s:]/g, '-')}.png`,
+      { type: 'image/png' },
+    )
+
+    const uploadResponse = await uploadExportPoster(file, liff.getContext()?.userId || '')
+    console.log('uploadResponse', uploadResponse)
+
+    await liff.sendMessages([
+      {
+        type: 'text',
+        text: 'โปสเตอร์บันทึกอาหาร',
+      },
+    ])
+
+    console.log('Sent message')
+    liff.closeWindow()
+  } catch (error) {
+    console.error('Error during download/upload:', error)
+    isLoading.value = false
+  }
 }
 </script>
 
@@ -284,20 +311,43 @@ async function download() {
     filter 0.2s ease;
 }
 
-.send-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.send-button:hover:not(:disabled) {
+.send-button:hover:not(:disabled):not(.is-disabled) {
   filter: brightness(1.02);
 }
 
-.send-button:active:not(:disabled) {
+.send-button:active:not(:disabled):not(.is-disabled) {
   transform: translateY(1px);
   box-shadow:
     -2px -2px 1px 0 #cce5bb inset,
     2px 2px 1px 0 #e0f0d5 inset;
+}
+
+.send-button:disabled,
+.send-button.is-disabled {
+  background: #cfcfcf !important;
+  color: #7a7a7a !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  box-shadow:
+    -2px -2px 1px 0 #c6c6c6 inset,
+    2px 2px 1px 0 #e0e0e0 inset !important;
+  filter: none !important;
+  transform: none !important;
+  opacity: 1;
+}
+
+/* กัน hover/active เมื่อ disabled */
+.send-button:disabled:hover,
+.send-button.is-disabled:hover {
+  filter: none !important;
+}
+
+.send-button:disabled:active,
+.send-button.is-disabled:active {
+  transform: none !important;
+  box-shadow:
+    -2px -2px 1px 0 #c6c6c6 inset,
+    2px 2px 1px 0 #e0e0e0 inset !important;
 }
 
 .close-button {
@@ -327,15 +377,27 @@ async function download() {
     filter 0.2s ease;
 }
 
-.close-button:hover {
+.close-button:hover:not(:disabled) {
   filter: brightness(1.02);
 }
 
-.close-button:active {
+.close-button:active:not(:disabled) {
   transform: translateY(1px);
   box-shadow:
     -2px -2px 1px 0 #e7baba inset,
     2px 2px 1px 0 #ffdada inset;
+}
+
+.close-button:disabled {
+  background: #e0e0e0 !important;
+  color: #999 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  box-shadow:
+    -2px -2px 1px 0 #d0d0d0 inset,
+    2px 2px 1px 0 #f0f0f0 inset !important;
+  filter: none !important;
+  transform: none !important;
 }
 
 .icon {
@@ -346,6 +408,44 @@ async function download() {
   stroke-width: 1.75;
 }
 
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7); /* ดำ 70% */
+  z-index: 2000; /* ต้องมากกว่า z-[1000] ของ UModal */
+  display: grid;
+  place-items: center;
+  pointer-events: all;
+}
+
+/* กล่องเนื้อหาโหลด */
+.loading-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: #fff;
+  text-align: center;
+  font-family: 'Noto Looped Thai UI';
+}
+.loading-text {
+  font-size: 18px;
+  font-weight: 500;
+}
+.loading-spinner {
+  width: 50px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(farthest-side,#9AC8EA 94%,#0000) top/8px 8px no-repeat,
+    conic-gradient(#0000 30%,#9AC8EA);
+  -webkit-mask: radial-gradient(farthest-side,#0000 calc(100% - 8px),#000 0);
+  mask: radial-gradient(farthest-side,#0000 calc(100% - 8px),#000 0);
+  animation: l13 1s infinite linear;
+}
+@keyframes l13{
+  100%{transform: rotate(1turn)}
+}
 @media (max-width: 375px) {
   .close-button,
   .send-button {
@@ -371,3 +471,4 @@ async function download() {
   }
 }
 </style>
+
