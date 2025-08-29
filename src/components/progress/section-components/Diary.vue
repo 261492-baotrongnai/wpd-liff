@@ -8,7 +8,8 @@
     @update:modelValue="onModelValueUpdate"
     @updateGrade="updateGrade"
   />
-  <!-- ถ้ามีข้อมูลมื้ออาหาร -->
+
+  <!-- 🥗 มีข้อมูลมื้ออาหาร -->
   <div v-if="day && !loading && day.meals && day.meals.length > 0" class="diary-wrapper px-4">
     <!-- หัววันที่ -->
     <p class="date-header">
@@ -16,19 +17,17 @@
         modelValue
           ? isToday(modelValue)
             ? 'วันนี้, ' +
-              df
-                .format(modelValue.toDate(getLocalTimeZone()))
-                .replace(/^วัน[^0-9]* /, '') // ลบคำว่า "วัน..."
-                .replace('พ.ศ. ', '') // ลบ "พ.ศ."
-            : df
-                .format(modelValue.toDate(getLocalTimeZone()))
-                .replace('ที่ ', ', ') // เปลี่ยน "ที่" เป็น ","
-                .replace('พ.ศ. ', '') // ลบ "พ.ศ."
+              df.format(modelValue.toDate(getLocalTimeZone()))
+                .replace(/^วัน[^0-9]* /, '')
+                .replace('พ.ศ. ', '')
+            : df.format(modelValue.toDate(getLocalTimeZone()))
+                .replace('ที่ ', ', ')
+                .replace('พ.ศ. ', '')
           : 'Select a date'
       }}
     </p>
 
-    <!-- Timeline แสดงรายการมื้อ -->
+    <!-- Timeline -->
     <div class="timeline">
       <div
         v-for="it in timeline"
@@ -36,18 +35,18 @@
         class="timeline-item"
         :class="{ 'is-last': it.isLast, 'has-badge': it.showTime }"
       >
-        <!-- คอลัมน์เวลา -->
+        <!-- เวลา -->
         <div class="time-col">
           <div v-if="it.showTime" class="time-badge">{{ it.time }} น.</div>
         </div>
 
-        <!-- Bubble แสดงข้อมูลมื้อ -->
+        <!-- Bubble -->
         <div class="bubble" :class="{ 'bubble--left': it.showTime }">
           <div class="bubble-inner">
             <!-- ชื่อมื้อ -->
             <p class="bubble-title">{{ mealTypeTranslations[it.meal.mealType] }}</p>
 
-            <!-- รูปอาหาร -->
+            <!-- รูป -->
             <div class="bubble-media">
               <div
                 v-if="imageLoaded[it.meal.id]"
@@ -59,49 +58,28 @@
               <USkeleton v-else class="w-[240px] h-[240px] rounded-[14px]" />
             </div>
 
-            <!-- รายการอาหารในมื้อ -->
+            <!-- รายการอาหาร -->
             <p class="bubble-text">
-              <span v-for="(part, i) in it.meal.foodNames.split(',')" :key="i" class="food-chunk">
+              <span
+                v-for="(part, i) in it.meal.foodNames.split(',')"
+                :key="i"
+                class="food-chunk"
+              >
                 {{ part.trim() }}
               </span>
             </p>
           </div>
 
-          <!-- แผงเกรด -->
-          <div
-            class="grade-panel"
-            :class="`grade-${(it.meal.avgGrade || 'NA').toString().toUpperCase()}`"
-          >
+          <!-- Grade panel -->
+          <div class="grade-panel" :class="`grade-${(it.meal.avgGrade || 'NA').toString().toUpperCase()}`">
             <div class="grade-score-nurse">
-              <!-- เลือกรูปพยาบาลตามเกรด -->
-              <img
-                v-if="it.meal.avgGrade === 'A'"
-                class="grade-illu"
-                src="../../../assets/progress/diary/nurse-a.png"
-              />
-              <img
-                v-else-if="it.meal.avgGrade === 'B'"
-                class="grade-illu"
-                src="../../../assets/progress/diary/nurse-b.png"
-              />
-              <img
-                v-else-if="it.meal.avgGrade === 'C'"
-                class="grade-illu"
-                src="../../../assets/progress/diary/nurse-c.png"
-              />
+              <img v-if="it.meal.avgGrade === 'A'" class="grade-illu" src="../../../assets/progress/diary/nurse-a.png" />
+              <img v-else-if="it.meal.avgGrade === 'B'" class="grade-illu" src="../../../assets/progress/diary/nurse-b.png" />
+              <img v-else-if="it.meal.avgGrade === 'C'" class="grade-illu" src="../../../assets/progress/diary/nurse-c.png" />
 
-              <!-- ข้อความเกรด -->
               <div class="grade-score-col">
-                <span
-                  class="grade-label"
-                  :class="`grade-${(it.meal.avgGrade || 'NA').toString().toUpperCase()}`"
-                >
-                  เกรด
-                </span>
-                <span
-                  class="grade-score"
-                  :class="`grade-${(it.meal.avgGrade || 'NA').toString().toUpperCase()}`"
-                >
+                <span class="grade-label" :class="`grade-${(it.meal.avgGrade || 'NA').toString().toUpperCase()}`">เกรด</span>
+                <span class="grade-score" :class="`grade-${(it.meal.avgGrade || 'NA').toString().toUpperCase()}`">
                   {{ it.meal.avgGrade ?? '-' }}
                 </span>
               </div>
@@ -124,38 +102,31 @@
                 ? (m.avgGrade as 'A' | 'B' | 'C')
                 : null,
             }))
-            .filter(
-              (x): x is { signedUrl: string; name: string; grade: 'A' | 'B' | 'C' } => !!x.grade,
-            )
+            .filter((x): x is { signedUrl: string; name: string; grade: 'A' | 'B' | 'C' } => !!x.grade)
         "
       />
     </div>
   </div>
 
-  <!-- ถ้าวันนี้หรือวันที่เลือกไม่มีข้อมูล -->
-  <div
-    v-else-if="day && !loading && (!day.meals || day.meals.length === 0)"
-    class="diary-wrapper flex flex-col px-4"
-  >
+  <!-- 📭 ไม่มีข้อมูล -->
+  <div v-else-if="day && !loading && (!day.meals || day.meals.length === 0)" class="diary-wrapper flex flex-col px-4">
     <!-- หัววันที่ -->
     <p class="date-header">
       {{
         modelValue
           ? isToday(modelValue)
             ? 'วันนี้, ' +
-              df
-                .format(modelValue.toDate(getLocalTimeZone()))
+              df.format(modelValue.toDate(getLocalTimeZone()))
                 .replace(/^วัน[^0-9]* /, '')
                 .replace('พ.ศ. ', '')
-            : df
-                .format(modelValue.toDate(getLocalTimeZone()))
+            : df.format(modelValue.toDate(getLocalTimeZone()))
                 .replace('ที่ ', ', ')
                 .replace('พ.ศ. ', '')
           : 'Select a date'
       }}
     </p>
 
-    <!-- ภาพ no data -->
+    <!-- No data image -->
     <div class="flex-1 flex items-center justify-center" style="margin-top: -50px">
       <img
         v-if="isToday(modelValue)"
@@ -172,18 +143,32 @@
     </div>
   </div>
 
-  <!-- สถานะโหลดข้อมูล -->
-  <div v-else class="flex flex-col gap-2">
-    <USkeleton class="w-[170px] h-[25px] bg-[#ECEFF2]" />
-    <div class="p-2 flex flex-row mt-2 gap-2">
-      <USkeleton class="w-[100px] h-[100px] bg-[#ECEFF2]" />
-      <div class="flex flex-col gap-2 ml-2">
-        <USkeleton class="w-[200px] h-[25px] bg-[#ECEFF2]" />
-        <USkeleton class="w-[100px] h-[25px] bg-[#ECEFF2]" />
+  <!-- ⏳ กำลังโหลด (skeleton) -->
+  <div v-else-if="loading" class="diary-wrapper loading px-4 py-6">
+    <!-- หัววันที่ -->
+    <USkeleton class="h-[28px] w-[220px] mt-5 ml-4 rounded-[6px] skel" />
+
+    <!-- Timeline skeleton -->
+    <div class="timeline py-4">
+      <div v-for="n in 3" :key="n" class="timeline-item skel-item">
+        <div class="time-col">
+          <USkeleton class="skel-time-badge skel" />
+        </div>
+        <div class="bubble bubble--left skel">
+          <div class="bubble-inner skel">
+            <USkeleton class="h-[200px] w-[100px] mx-auto mb-3 rounded-[6px] skel" />
+          </div>
+        </div>
       </div>
+    </div>
+
+    <!-- ปุ่มแชร์ -->
+    <div class="share-container mt-6 mb-4">
+      <USkeleton class="h-[48px] w-[220px] mx-auto rounded-[14px] skel" />
     </div>
   </div>
 </template>
+
 
 <script setup lang="ts">
 import { onMounted, shallowRef, computed, watchEffect } from 'vue'
@@ -236,7 +221,14 @@ const shareDate = computed(() => {
   const m = String(js.getMonth() + 1).padStart(2, '0')
   const d = String(js.getDate()).padStart(2, '0')
   const ymd = `${y}-${m}-${d}`
-  console.log('[DiaryPage] shareDate ->', ymd, '| local:', js.toString(), '| iso:', js.toISOString())
+  console.log(
+    '[DiaryPage] shareDate ->',
+    ymd,
+    '| local:',
+    js.toString(),
+    '| iso:',
+    js.toISOString(),
+  )
   return ymd
 })
 /** debug: ดูหัววันที่ที่กำลังจะแสดง */
@@ -291,7 +283,14 @@ async function onModelValueUpdate(newValue: CalendarDate) {
   const js = new Date(newValue.year - 543, newValue.month - 1, newValue.day)
   const ymd = `${js.getFullYear()}-${String(js.getMonth() + 1).padStart(2, '0')}-${String(js.getDate()).padStart(2, '0')}`
 
-  console.log('[DiaryPage] fetch getDayMealsAndStats with ->', ymd, '| local:', js.toString(), '| iso:', js.toISOString())
+  console.log(
+    '[DiaryPage] fetch getDayMealsAndStats with ->',
+    ymd,
+    '| local:',
+    js.toString(),
+    '| iso:',
+    js.toISOString(),
+  )
 
   day.value = await getDayMealsAndStats(ymd)
   if (day.value?.stats) updateGrade(day.value.stats.avgGrade)
@@ -583,6 +582,45 @@ export default {
 .no-data-selected-date-img {
   width: 300px;
   height: auto;
+}
+.skel-item {
+  margin-bottom: 23px;
+}
+
+/* skeleton ของ badge เวลา */
+.skel-time-badge {
+  height: 34px;
+  width: 78px;
+  border-radius: 9999px;
+}
+
+/* skeleton ของรูปในบับเบิล (ใช้สัดส่วนเท่าของจริง) */
+.skel-bubble-img {
+  width: 100px;
+  max-width: 100px;
+  aspect-ratio: 1/1;
+  border-radius: 5px;
+}
+.skel-grade-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: clamp(100px, 12vw, 120px);
+  padding: 8px 0;
+}
+.skel {
+  background-color: #eef0f4 !important; /* เทาอ่อน (Tailwind gray-200) */
+}
+.diary-wrapper.loading .bubble.skel,
+.diary-wrapper.loading .bubble--left.skel::after {
+  background: #eef0f4 !important;
+}
+
+/* ==== เส้น timeline ตอน skeleton ==== */
+.timeline-item.skel-item .time-col::after {
+  background-color: #eaecf2 !important; /* เทาอ่อน */
 }
 
 @media (min-width: 351px) {

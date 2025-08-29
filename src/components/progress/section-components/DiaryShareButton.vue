@@ -15,6 +15,15 @@
       footer: 'z-[1001] border-gray-200 bg-white p-0 flex justify-center py-3 px-2',
     }"
   >
+    <!-- fullscreen loading overlay -->
+    <teleport to="body">
+      <div v-if="isLoading" class="loading-overlay" role="alert" aria-busy="true">
+        <div class="loading-box">
+          <span class="loading-spinner" aria-hidden="true"></span>
+          <div class="loading-text">กำลังส่งรูป <br/>ไปยังห้องแชต</div>
+        </div>
+      </div>
+    </teleport>
     <template #body>
       <div class="preview-box">
         <img v-if="previewUrl" :src="previewUrl" class="preview-img" alt="Poster preview" />
@@ -33,8 +42,14 @@
     </template>
     <template #footer>
       <div class="actions">
-        <button type="button" class="send-button" :disabled="!previewUrl" @click="download">
-          ส่งรูปทางแชท <Forward class="icon" aria-hidden="true" />
+        <button
+          type="button"
+          class="send-button"
+          :disabled="!previewUrl"
+          :class="{ 'is-disabled': !previewUrl }"
+          @click="download"
+        >
+          ส่งรูปทางแชต <Forward class="icon" aria-hidden="true" />
         </button>
 
         <button type="button" class="close-button" @click="isOpen = false">
@@ -60,6 +75,7 @@ const props = defineProps<{
 const isOpen = ref(false)
 const posterRef = ref<SharePosterExpose | null>(null) // <<<< ใช้ type ที่ export มา
 const previewUrl = ref<string | null>(null)
+const isLoading = ref(false)
 
 watch(isOpen, async (open) => {
   if (!open) {
@@ -74,27 +90,30 @@ watch(isOpen, async (open) => {
 })
 
 async function download() {
-  if (!previewUrl.value) return
-  const a = document.createElement('a')
-  a.href = previewUrl.value
-  a.download = `meals_${props.date}.png`
-  a.click()
+  if (!previewUrl.value || isLoading.value) return
+  try {
+    isLoading.value = true
+    const a = document.createElement('a')
+    a.href = previewUrl.value
+    a.download = `meals_${props.date}.png`
+    a.click()
 
-  const blob = await (await fetch(previewUrl.value)).blob()
-  const file = new File([blob], `meals_${props.date}.png`, { type: 'image/png' })
-  const uploadResponse = await uploadExportPoster(
-    file,
-    liff.getContext()?.userId || '',
-  )
-  console.log('uploadResponse', uploadResponse)
-  await liff.sendMessages([
-    {
-      type: 'text',
-      text: 'โปสเตอร์บันทึกอาหาร',
-    },
-  ])
-  console.log('Sent message')
-  liff.closeWindow()
+    const blob = await (await fetch(previewUrl.value)).blob()
+    const file = new File([blob], `meals_${props.date}.png`, { type: 'image/png' })
+    const uploadResponse = await uploadExportPoster(file, liff.getContext()?.userId || '')
+    console.log('uploadResponse', uploadResponse)
+    await liff.sendMessages([
+      {
+        type: 'text',
+        text: 'โปสเตอร์บันทึกอาหาร',
+      },
+    ])
+    console.log('Sent message')
+    liff.closeWindow()
+  } catch (error) {
+    console.error('Error during download/upload:', error)
+    isLoading.value = false
+  }
 }
 </script>
 
@@ -228,6 +247,33 @@ async function download() {
     -2px -2px 1px 0 #cce5bb inset,
     2px 2px 1px 0 #e0f0d5 inset;
 }
+.send-button:disabled,
+.send-button.is-disabled {
+  background: #cfcfcf !important;
+  color: #7a7a7a !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  box-shadow:
+    -2px -2px 1px 0 #c6c6c6 inset,
+    2px 2px 1px 0 #e0e0e0 inset !important;
+  filter: none !important;
+  transform: none !important;
+  opacity: 1; /* หรือ 0.8 ถ้าอยากจางลง */
+}
+
+/* กัน hover/active */
+.send-button:disabled:hover,
+.send-button.is-disabled:hover {
+  filter: none !important;
+}
+
+.send-button:disabled:active,
+.send-button.is-disabled:active {
+  transform: none !important;
+  box-shadow:
+    -2px -2px 1px 0 #c6c6c6 inset,
+    2px 2px 1px 0 #e0e0e0 inset !important;
+}
 .close-button {
   display: inline-flex;
   align-items: center;
@@ -263,6 +309,44 @@ async function download() {
   flex: 0 0 auto;
   vertical-align: -0.05em; /* จูน baseline ให้ไอคอนนั่งสวยกับข้อความ */
   stroke-width: 1.75; /* ให้เส้นไม่หนาไปตอนย่อ */
+}
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7); /* ดำ 70% */
+  z-index: 2000; /* ต้องมากกว่า z-[1000] ของ UModal */
+  display: grid;
+  place-items: center;
+  pointer-events: all;
+}
+
+/* กล่องเนื้อหาโหลด */
+.loading-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: #fff;
+  text-align: center;
+  font-family: 'Noto Looped Thai UI';
+}
+.loading-text {
+  font-size: 18px;
+  font-weight: 500;
+}
+.loading-spinner {
+  width: 50px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(farthest-side,#9AC8EA 94%,#0000) top/8px 8px no-repeat,
+    conic-gradient(#0000 30%,#9AC8EA);
+  -webkit-mask: radial-gradient(farthest-side,#0000 calc(100% - 8px),#000 0);
+  mask: radial-gradient(farthest-side,#0000 calc(100% - 8px),#000 0);
+  animation: l13 1s infinite linear;
+}
+@keyframes l13{
+  100%{transform: rotate(1turn)}
 }
 @media (max-width: 375px) {
   /* tablet/มือถือแนวนอน */

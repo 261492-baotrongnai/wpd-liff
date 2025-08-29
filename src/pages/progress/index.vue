@@ -4,9 +4,9 @@
       <ProgressNav  @updateSection="updateSection" />
       <ProgressSection :selectedSection="section" @updateGrade="updateGrade" />
     </div>
-    <div v-else class="flex flex-col gap-4 w-full items-center justify-center">
+    <div v-else class="flex flex-col gap-4 w-full items-center justify-center py-6">
       <USkeleton class="h-[62px] w-[433px] rounded-lg bg-[#ECEFF2]" />
-      <USkeleton class="h-[100px] w-[433px] rounded-lg bg-[#ECEFF2]" />
+      <USkeleton class="h-[100px] w-[433px] rounded-lg bg-[#ECEFF2] pt-5" />
       <USkeleton class="h-[30px] w-[103px] rounded-lg bg-[#ECEFF2]" />
       <USkeleton class="h-[1px] w-[80%] rounded-lg bg-[#ECEFF2]" />
       <USkeleton class="h-[20px] w-[123px] rounded-lg bg-[#ECEFF2]" />
