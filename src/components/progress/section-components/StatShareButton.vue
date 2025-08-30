@@ -22,7 +22,7 @@
       <div v-if="isLoading" class="loading-overlay" role="alert" aria-busy="true">
         <div class="loading-box">
           <span class="loading-spinner" aria-hidden="true"></span>
-          <div class="loading-text">กำลังส่งรูป <br/>ไปยังห้องแชต</div>
+          <div class="loading-text">กำลังส่งรูป <br />ไปยังห้องแชต</div>
         </div>
       </div>
     </teleport>
@@ -60,6 +60,7 @@
         <button type="button" class="close-button" :disabled="isLoading" @click="isOpen = false">
           ปิดหน้านี้ <X class="icon" aria-hidden="true" />
         </button>
+        <!-- <div>{{ downloadSuccess }}</div> -->
       </div>
     </template>
   </UModal>
@@ -93,6 +94,7 @@ const isOpen = ref(false)
 const posterRef = ref<StatPosterExpose | null>(null)
 const previewUrl = ref<string | null>(null)
 const isLoading = ref(false)
+const downloadSuccess = ref(false)
 
 // แก้ไข: สร้างวันที่ในรูปแบบที่ StatPoster ต้องการ
 const currentDate = computed(() => {
@@ -158,38 +160,57 @@ watch(isOpen, async (open) => {
 async function download() {
   if (!previewUrl.value || isLoading.value) return
 
-  try {
-    isLoading.value = true
+  isLoading.value = true
 
+  // Detect LIFF environment
+  const context = liff.getContext()
+  const isLiff = context && context.type !== 'external'
+  if (isLiff) {
+    // On LIFF, always use saveToState (upload and send message)
+    const blob = await (await fetch(previewUrl.value)).blob()
+    await saveToState(blob)
+    isLoading.value = false
+    return
+  }
+
+  // Normal browser download
+  try {
     const filename = `stats_${props.type}_${currentDate.value.replace(/[\/\s:]/g, '-')}.png`
     const a = document.createElement('a')
     a.href = previewUrl.value
     a.download = filename
     a.click()
-
-    const blob = await (await fetch(previewUrl.value)).blob()
-    const file = new File(
-      [blob],
-      `stats_${props.type}_${currentDate.value.replace(/[\/\s:]/g, '-')}.png`,
-      { type: 'image/png' },
-    )
-
-    const uploadResponse = await uploadExportPoster(file, liff.getContext()?.userId || '')
-    console.log('uploadResponse', uploadResponse)
-
-    await liff.sendMessages([
-      {
-        type: 'text',
-        text: 'โปสเตอร์บันทึกอาหาร',
-      },
-    ])
-
-    console.log('Sent message')
-    liff.closeWindow()
+    downloadSuccess.value = true
+    console.log('download success, skip upload')
   } catch (error) {
-    console.error('Error during download/upload:', error)
-    isLoading.value = false
+    console.error('Error triggering download:', error)
+    // fallback to upload if download fails
+    const blob = await (await fetch(previewUrl.value)).blob()
+    await saveToState(blob)
   }
+
+  isLoading.value = false
+}
+
+async function saveToState(blob: Blob) {
+  const file = new File(
+    [blob],
+    `stats_${props.type}_${currentDate.value.replace(/[\/\s:]/g, '-')}.png`,
+    { type: 'image/png' },
+  )
+
+  const uploadResponse = await uploadExportPoster(file, liff.getContext()?.userId || '')
+  console.log('uploadResponse', uploadResponse)
+
+  await liff.sendMessages([
+    {
+      type: 'text',
+      text: 'โปสเตอร์บันทึกอาหาร',
+    },
+  ])
+
+  console.log('Sent message')
+  liff.closeWindow()
 }
 </script>
 
@@ -437,14 +458,16 @@ async function download() {
   aspect-ratio: 1;
   border-radius: 50%;
   background:
-    radial-gradient(farthest-side,#9AC8EA 94%,#0000) top/8px 8px no-repeat,
-    conic-gradient(#0000 30%,#9AC8EA);
-  -webkit-mask: radial-gradient(farthest-side,#0000 calc(100% - 8px),#000 0);
-  mask: radial-gradient(farthest-side,#0000 calc(100% - 8px),#000 0);
+    radial-gradient(farthest-side, #9ac8ea 94%, #0000) top/8px 8px no-repeat,
+    conic-gradient(#0000 30%, #9ac8ea);
+  -webkit-mask: radial-gradient(farthest-side, #0000 calc(100% - 8px), #000 0);
+  mask: radial-gradient(farthest-side, #0000 calc(100% - 8px), #000 0);
   animation: l13 1s infinite linear;
 }
-@keyframes l13{
-  100%{transform: rotate(1turn)}
+@keyframes l13 {
+  100% {
+    transform: rotate(1turn);
+  }
 }
 @media (max-width: 375px) {
   .close-button,
@@ -471,4 +494,3 @@ async function download() {
   }
 }
 </style>
-
