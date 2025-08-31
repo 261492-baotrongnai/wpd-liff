@@ -9,17 +9,16 @@
         <div class="date">{{ displayDate }}</div>
       </div>
 
+      <!-- template -->
       <div class="meals">
-        <div v-for="(m, i) in meals" :key="m.signedUrl || i" class="meal-card">
+        <div v-for="(m, i) in limitedMeals" :key="m.signedUrl || i" class="meal-card">
           <div class="grade grade-text" :class="'grade-' + m.grade">{{ m.grade }}</div>
-
           <div
             class="thumb-box"
             :style="{ backgroundImage: `url(${m.signedUrl})` }"
             role="img"
             :aria-label="m.name"
           />
-          <!-- ใช้ชื่อที่ถูกตัดตามจำนวนตัวอักษร: ถ้ายาวเกิน MAX_CHARS ตัด 4 ตัวท้าย แล้วเติม ... -->
           <div class="name" :title="m.name">{{ cutByChars(m.name) }}</div>
         </div>
       </div>
@@ -36,7 +35,8 @@ type PosterMeal = { signedUrl: string; name: string; grade: Grade }
 
 const props = defineProps<{ date: string; meals: PosterMeal[] }>()
 const root = ref<HTMLElement | null>(null)
-
+const MAX_ITEMS = 9
+const limitedMeals = computed(() => (props.meals || []).slice(0, MAX_ITEMS))
 /* ===== helpers ===== */
 const cssBg = computed(() => `url(${bgUrl})`)
 const displayDate = computed(() => {
@@ -113,8 +113,8 @@ export type SharePosterExpose = { renderToBlob: (targetWidth?: number) => Promis
 defineExpose<SharePosterExpose>({ renderToBlob })
 
 /* ===== ตัดชื่อแบบ “ลบ 4 ตัวท้ายแล้วเติม … ถ้ายาวเกินขีดจำกัด” ===== */
-const MAX_CHARS = 13
-const REPLACE_TAIL = 3
+const MAX_CHARS = 12
+const REPLACE_TAIL = 1
 
 function cutByChars(name: string): string {
   if (!name) return ''
@@ -130,8 +130,8 @@ function cutByChars(name: string): string {
 .poster {
   --pad: 20px;
   --poster-w: min(900px, 80vw);
-  --card-max: 300px;
-  --gap-x: 80px;
+  --card-w: 280px;
+  --gap-x: 70px;
   --gap-y: 60px;
   width: var(--poster-w);
   aspect-ratio: 3/4;
@@ -175,10 +175,10 @@ function cutByChars(name: string): string {
 .meals {
   padding-top: 180px;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, var(--card-w));
+  justify-content: center; /* ให้อยู่กลาง */
   column-gap: var(--gap-x);
   row-gap: var(--gap-y);
-  max-width: calc(3 * var(--card-max) + var(--gap-x));
   margin: 0 auto;
   /* ไม่ต้องใส่ justify-content หรือ justify-items */
 }
@@ -187,8 +187,9 @@ function cutByChars(name: string): string {
   --card-bg-rgb: 230 242 255;
   position: relative;
   padding: 20px 30px;
-  width: 100%;
-  max-width: var(--card-max);
+  width: var(--card-w);
+  max-width: none;
+  box-sizing: border-box;
   background-color: var(--card-bg);
   border-radius: 10px;
   display: flex;
@@ -197,8 +198,7 @@ function cutByChars(name: string): string {
 }
 .thumb-box {
   position: relative;
-  width: 100%;
-  padding-top: 100%;
+    aspect-ratio: 1 / 1;
   overflow: hidden;
   border-radius: 8px;
   border: 5px solid #f5faff;
