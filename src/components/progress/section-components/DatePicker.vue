@@ -117,7 +117,7 @@
     </template>
 
     <!-- ปุ่มยืนยันการเลือกวัน -->
-    <template #footer>
+    <!-- <template #footer>
       <div class="flex justify-center w-full mt-2">
         <UButton
           color="neutral"
@@ -130,7 +130,7 @@
           ดูวันที่เลือก
         </UButton>
       </div>
-    </template>
+    </template> -->
   </UModal>
 </template>
 
@@ -195,7 +195,7 @@ function onCalendarDayClick(date: Date) {
   const clicked = new Date(date)
   clicked.setHours(0, 0, 0, 0)
 
-  // ห้ามเลือกวันในอนาคต
+  // กันวันอนาคต
   if (clicked > today) return
 
   const calDate = new CalendarDate(
@@ -204,22 +204,30 @@ function onCalendarDayClick(date: Date) {
     clicked.getMonth() + 1,
     clicked.getDate(),
   )
+
+  // อัปเดตภายในไว้ด้วย (เพื่อให้ UI ในโมดัลทันสมัย)
   internalModelValue.value = calDate
+
+  // ⬇️ ยิงค่าออกไปให้ parent ทันที และปิดโมดัล
+  emit('update:modelValue', calDate)
+  closedByUserAction.value = true
+  isOpen.value = false
 }
+
 
 // ปุ่มยืนยันการเลือกวัน
-function handleConfirmClick() {
-  closedByUserAction.value = true
-  confirmSelectedDate()
-  isOpen.value = false
-}
+// function handleConfirmClick() {
+//   closedByUserAction.value = true
+//   confirmSelectedDate()
+//   isOpen.value = false
+// }
 
-// อัปเดตวันจริงเมื่อกด confirm
-function confirmSelectedDate() {
-  emit('update:modelValue', internalModelValue.value)
-  closedByUserAction.value = true
-  isOpen.value = false
-}
+// // อัปเดตวันจริงเมื่อกด confirm
+// function confirmSelectedDate() {
+//   emit('update:modelValue', internalModelValue.value)
+//   closedByUserAction.value = true
+//   isOpen.value = false
+// }
 
 // สร้าง array 7 วันจากวันปัจจุบัน (เพื่อแสดงแนวนอน)
 const selectedWeek = computed(() => {
