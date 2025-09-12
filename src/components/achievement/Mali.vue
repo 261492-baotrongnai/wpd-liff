@@ -1,7 +1,7 @@
 <template>
   <div class="mali-gauge">
     <div class="current-mali">
-      <span :style="{ color: currentMali.color }">{{ currentMali.mali }}</span>
+      <span class="mali-stage">{{ currentMali.mali }}</span>
     </div>
     <div class="gauge-bar">
       <div class="gauge-fill" :style="{ width: gaugePercentage + '%' }"></div>
@@ -9,25 +9,23 @@
     </div>
     <div class="remaining-streaks">
       <span v-if="remainingStreaks > 0"
-        >บันทึกติดต่อกันอีก {{ remainingStreaks }} วัน จะได้ {{ nextMali.mali }}</span
+        >บันทึกอีก {{ remainingStreaks }} วัน จะได้ {{ nextMali.mali }}</span
       >
-      <span v-else>บันทึกติดต่อกัน 90 วันแล้ว! เก่งมากค่ะ</span>
+      <span v-else>บันทึกครบ 90 วันแล้ว! เก่งมากค่ะ</span>
     </div>
     <div class="mali-image">
       <img :src="currentMali.image" alt="Mali Image" />
     </div>
-
-    <button class="share-button">แชร์ให้ทุกคนดูเลย!</button>
   </div>
 </template>
 
 <script lang="ts">
-import level5Image from '@/assets/mali-level/level5.jpg'
-import level4Image from '@/assets/mali-level/level4.jpg'
-import level3Image from '@/assets/mali-level/level3.jpg'
-import level2Image from '@/assets/mali-level/level2.jpg'
-import level1Image from '@/assets/mali-level/level1.jpg'
-import starterImage from '@/assets/mali-level/starter.jpg'
+import level5Image from '@/assets/mali-level/mali level 5.png'
+import level4Image from '@/assets/mali-level/mali level 4.png'
+import level3Image from '@/assets/mali-level/mali level 3.png'
+import level2Image from '@/assets/mali-level/mali level 2.png'
+import level1Image from '@/assets/mali-level/mali level 1.png'
+import starterImage from '@/assets/mali-level/mali level 0.png'
 
 export default {
   name: 'MaliComponent',
@@ -44,52 +42,44 @@ export default {
           mali: 'ต้นอ่อนมะลิ',
           level: 'starter',
           threshold: 0,
-          color: '#2196f3',
           image: starterImage,
         },
         {
           mali: 'พุ่มมะลิจิ๋ว',
           level: '1',
           threshold: 1,
-          color: '#4caf50',
           image: level1Image,
         },
         {
           mali: 'พุ่มมะลิ',
           level: '2',
           threshold: 10,
-          color: '#ff9800',
           image: level2Image,
         },
         {
           mali: 'มะลิดอกตูม',
           level: '3',
           threshold: 30,
-          color: '#f44336',
           image: level3Image,
         },
         {
           mali: 'มะลิดอกบาน',
           level: '4',
           threshold: 60,
-          color: '#9c27b0',
           image: level4Image,
         },
         {
           mali: 'มะลิหอมฟุ้ง',
           level: '5',
           threshold: 75,
-          color: '#673ab7',
           image: level5Image,
         },
         {
           mali: 'มะลิหอมฟุ้งข้ามรั้ว',
           level: 'max',
           threshold: 90,
-          color: '#3f51b5',
           image: level5Image,
         },
-        
       ],
     }
   },
@@ -130,10 +120,19 @@ export default {
 </script>
 
 <style scoped>
+.mali-stage {
+  color: #194678;
+  font-family: 'Noto Looped Thai UI Medium';
+  font-size: 22px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 32px; /* 145.455% */
+  letter-spacing: 0.22px;
+}
 .mali-gauge {
   text-align: center;
-  padding-left: 60px;
-  padding-right: 60px;
+  padding-left: 30px;
+  padding-right: 30px;
 }
 
 .current-mali {
@@ -144,16 +143,16 @@ export default {
 
 .gauge-bar {
   position: relative;
-  height: 20px;
-  background-color: #ccc;
+  height: 22px;
+  background-color: #efefef;
   border-radius: 10px;
   overflow: hidden;
-  margin: 20px 0;
+  margin: 20px 20px 10px 20px;
 }
 
 .gauge-fill {
   height: 100%;
-  background-color: #4caf50;
+  background-color: #d2edff;
   transition: width 0.3s ease;
 }
 
@@ -162,20 +161,30 @@ export default {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 14px;
-  font-weight: bold;
-  color: #fff;
+  color: #194678;
+  font-family: merry;
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 32px; /* 160% */
+  letter-spacing: 0.2px;
 }
 
 .remaining-streaks {
-  font-size: 14px;
-  margin-top: 10px;
+  color: #194678;
+  text-align: center;
+  font-family: 'Noto Looped Thai UI';
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 32px; /* 200% */
+  letter-spacing: 0.16px;
 }
 
 .mali-image {
-  width: 80%; /* Adjust the width */
+  width: 90%; /* Adjust the width */
   height: auto; /* Maintain aspect ratio */
-  margin-top: 10px; /* Optional: Add spacing */
+  margin-top: 21px; /* Optional: Add spacing */
   margin-bottom: 10px;
   margin-inline: auto; /* Center the image */
   padding-inline: 20%; /* Optional: Add spacing */
@@ -188,8 +197,5 @@ export default {
   padding: 5px 10px;
   border-radius: 50px;
   cursor: pointer;
-}
-.share-button:hover {
-  background-color: #c5ed94;
 }
 </style>

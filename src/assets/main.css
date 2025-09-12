@@ -2,7 +2,7 @@
 @import '@nuxt/ui';
 @import 'tailwindcss';
 
-#app {
+html, body, #app {
   width: 100vw;
     /* กว้างเต็มหน้าจอ */
     height: 100vh;
@@ -13,7 +13,9 @@
     /* ไม่มีระยะห่างภายใน */
     font-weight: normal;
 }
-
+* {
+  box-sizing: border-box;
+}
 a,
 .green {
   text-decoration: none;
