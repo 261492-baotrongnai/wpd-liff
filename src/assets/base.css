@@ -71,6 +71,12 @@
   font-style: normal;
 }
 @font-face {
+  font-family: 'Noto Looped Thai UI Semibold';
+  src: url('./fonts/NotoSansThaiLooped-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+}
+@font-face {
   font-family: 'Noto Looped Thai UI Medium';
   src: url('./fonts/NotoSansThaiLooped-Medium.ttf') format('truetype');
   font-weight: 500;
@@ -87,6 +93,14 @@
   src: url('./fonts/gift.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
+}
+@font-face {
+  font-family: 'meejai Thin';
+  src: url('./fonts/meejaiThin-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'merry';
+  src: url('./fonts/merry.ttf') format('truetype');
 }
 
 body {
