@@ -51,6 +51,7 @@ import b90Off from '@/assets/achievement/badges/90-off.png'
 export default {
   name: 'ProgressCoin',
   props: {
+    coinAchieves: { type: Array, required: true },
     streaks: { type: Number, required: true },
   },
   data() {
@@ -62,8 +63,8 @@ export default {
           threshold: 10,
           imgActive: b10On,
           imgInactive: b10Off,
-          lineBase: '#EFEFEF',        // สีพื้นของเส้นช่วง 10→30
-          lineColor: '#B99F83',       // สีตอนเติม
+          lineBase: '#EFEFEF', // สีพื้นของเส้นช่วง 10→30
+          lineColor: '#B99F83', // สีตอนเติม
         },
         {
           threshold: 30,
@@ -111,7 +112,7 @@ export default {
 .box {
   position: relative;
   padding: 20px 0 25px 0;
-  margin: 25px 0 25px 0 ;
+  margin: 25px 0 25px 0;
   background: #fff;
 }
 .box::before,
@@ -126,8 +127,12 @@ export default {
   z-index: 1;
   pointer-events: none;
 }
-.box::before { top: 0; }
-.box::after  { bottom: 0; }
+.box::before {
+  top: 0;
+}
+.box::after {
+  bottom: 0;
+}
 
 /* หัวข้อ */
 .stat-title {
@@ -140,7 +145,11 @@ export default {
   font-family: 'Noto Looped Thai UI';
   font-weight: 600;
 }
-.stat-icon { width: 30px; height: 30px; flex-shrink: 0; }
+.stat-icon {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+}
 
 /* แถวเหรียญ + เส้นเชื่อม */
 .progress {
@@ -154,11 +163,17 @@ export default {
   align-items: center;
   flex-grow: 1;
 }
-.progress-item-container:last-child { max-width: fit-content; }
+.progress-item-container:last-child {
+  max-width: fit-content;
+}
 
-.badge-wrap { display: flex; align-items: center; justify-content: center; }
+.badge-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 .badge {
-  width: 60px;   /* ปรับขนาดเหรียญที่นี่ */
+  width: 60px; /* ปรับขนาดเหรียญที่นี่ */
   height: 60px;
   display: block;
 }
@@ -175,15 +190,21 @@ export default {
 }
 .progress-line-fill {
   position: absolute;
-  top: 0; left: 0;
+  top: 0;
+  left: 0;
   height: 100%;
   border-radius: 999px;
-  transition: width .3s ease;
+  transition: width 0.3s ease;
 }
 
 /* จอแคบ */
 @media (max-width: 360px) {
-  .badge { width: 50px; height: 50px; }
-  .progress-line { height: 4px; }
+  .badge {
+    width: 50px;
+    height: 50px;
+  }
+  .progress-line {
+    height: 4px;
+  }
 }
 </style>

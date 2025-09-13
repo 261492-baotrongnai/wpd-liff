@@ -53,7 +53,7 @@ export async function initializeLiff(liffIdEnv: string): Promise<void> {
     }
 
     // Login successful, you can redirect to app main page if needed
-    console.log('Login successful')
+    console.log('Login successful', authService.getToken())
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 401) {
       console.error('Non registered user, please agree with terms and conditions first')

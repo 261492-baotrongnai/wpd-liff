@@ -36,33 +36,35 @@
     <!-- Content -->
     <main class="content">
       <div class="store-grid">
-        <div v-for="f in storeFrames" :key="f.id" class="tile">
-          <div class="ring-box">
-            <img :src="f.img" class="ring-img" alt="" />
+        <div v-for="f in storeInfo.storeItems" :key="f.id" class="tile">
+          <div v-if="getFrameSrc(f.imageName)">
+            <div class="ring-box">
+              <img :src="getFrameSrc(f.imageName)" class="ring-img" alt="" />
 
-            <!-- ราคาโชว์เฉพาะยังไม่แลก -->
-            <div v-if="!f.owned" class="price-chip">
-              ใช้ {{ f.cost.toLocaleString('th-TH') }} แต้ม
+              <!-- ราคาโชว์เฉพาะยังไม่แลก -->
+              <div v-if="!f.owned" class="price-chip">
+                ใช้ {{ f.pointsRequired.toLocaleString('th-TH') }} แต้ม
+              </div>
+
+              <!-- ติ๊กถูกกลางกรอบ: โชว์เมื่อแลกแล้ว -->
+              <div v-else class="check-center">
+                <PhCheck :size="24" weight="bold" />
+              </div>
             </div>
 
-            <!-- ติ๊กถูกกลางกรอบ: โชว์เมื่อแลกแล้ว -->
-            <div v-else class="check-center">
-              <PhCheck :size="24" weight="bold" />
+            <!-- Footer: ปุ่ม/ข้อความ -->
+            <div class="tile-footer">
+              <button
+                v-if="!f.owned"
+                class="redeem-btn"
+                :disabled="!canRedeem(f)"
+                @click="openConfirm(f)"
+              >
+                แลกแต้ม
+              </button>
+
+              <p v-else class="success-text">ได้รับเรียบร้อย</p>
             </div>
-          </div>
-
-          <!-- Footer: ปุ่ม/ข้อความ -->
-          <div class="tile-footer">
-            <button
-              v-if="!f.owned"
-              class="redeem-btn"
-              :disabled="!canRedeem(f)"
-              @click="openConfirm(f)"
-            >
-              แลกแต้ม
-            </button>
-
-            <p v-else class="success-text">ได้รับเรียบร้อย</p>
           </div>
         </div>
       </div>
@@ -104,6 +106,22 @@
       </div>
     </transition>
 
+    <!-- Error modal -->
+    <transition name="fade-zoom">
+      <div
+        v-if="showError"
+        class="overlay"
+        role="alertdialog"
+        aria-live="assertive"
+        @click.self="showError = false"
+      >
+        <div class="error-card">
+          <div class="error-icon"><PhXCircle :size="30" weight="bold" /></div>
+          <p class="error-text-modal">{{ errorText }}</p>
+        </div>
+      </div>
+    </transition>
+
     <!-- Loading overlay -->
     <transition name="fade-zoom">
       <div v-if="isLoading" class="loading-overlay" role="status" aria-live="polite">
@@ -117,26 +135,27 @@
 </template>
 
 <script lang="ts">
-import { initializeLiff } from '@/utility/liffUtils'
+import { initializeLiff } from '@/services/liff.service'
 import liff from '@line/liff'
 import bgUrl from '@/assets/achievement/bg-blue.png'
-import { PhCheck } from '@phosphor-icons/vue'
-// ตัวอย่างรูปกรอบ (ใส่ของคุณเองได้)
-import frameAdult1 from '@/assets/frame/frameAdult1.png'
-import frameAdult2 from '@/assets/frame/frameAdult2.png'
-import frameElder1 from '@/assets/frame/frameElder1.png'
-import frameElder2 from '@/assets/frame/frameElder2.png'
+import { PhCheck, PhXCircle } from '@phosphor-icons/vue'
+import type { StoreInfo, StoreItem } from '@/types/achievement.types'
+import { getAllStoreItems, redeemStoreItem } from '@/services/achievement.service'
 
-type StoreFrame = {
-  id: number
-  img: string
-  cost: number
-  owned: boolean
-}
+const frameMap = Object.fromEntries(
+  Object.entries(
+    import.meta.glob('@/assets/frame/*', {
+      eager: true,
+      import: 'default',
+      query: '?url',
+    }),
+  ).map(([path, url]) => [path.split('/').pop()!, url as string]),
+)
 
 export default {
   name: 'FrameStore',
-  components: { PhCheck },
+  components: { PhCheck, PhXCircle },
+  emits: ['update-info'],
   data() {
     return {
       bgUrl,
@@ -145,25 +164,24 @@ export default {
       profileLoading: true,
       imageLoading: false,
 
-      // แต้มผู้ใช้ (ตัวอย่าง)
-      points: 1000,
+      // แต้มผู้ใช้
+      points: null as number | null,
 
-      // สินค้าในร้าน
-      storeFrames: [
-        { id: 1, img: frameAdult1, cost: 5, owned: false },
-        { id: 2, img: frameAdult2, cost: 5, owned: false },
-        { id: 3, img: frameElder1, cost: 10, owned: false },
-        { id: 4, img: frameElder2, cost: 12, owned: false },
-        // ใส่เพิ่มได้ตามต้องการ
-      ] as StoreFrame[],
       showConfirm: false,
       showSuccess: false,
-      pendingFrame: null as StoreFrame | null,
+      showError: false,
+      pendingFrame: null as StoreItem | null,
       successTimer: null as number | null,
+      errorTimer: null as number | null, // auto-hide
+
+      storeInfo: {} as StoreInfo,
+
+      redeemError: null as Error | null,
     }
   },
   beforeUnmount() {
     if (this.successTimer) window.clearTimeout(this.successTimer)
+    if (this.errorTimer) window.clearTimeout(this.errorTimer)
     document.body.classList.remove('modal-open')
   },
   watch: {
@@ -173,13 +191,21 @@ export default {
     showSuccess(v: boolean) {
       document.body.classList.toggle('modal-open', v)
     },
+    showError(v: boolean) {
+      document.body.classList.toggle('modal-open', v)
+    },
   },
   computed: {
     isLoading(): boolean {
       return this.profileLoading || this.imageLoading
     },
     formattedPoints(): string {
+      if (this.points === null) return 'ไม่พบข้อมูล'
       return this.points.toLocaleString('th-TH')
+    },
+    errorText(): string {
+      // + message to show
+      return 'เกิดข้อผิดพลาดในการแลกแต้ม กรุณาลองใหม่ค่ะ'
     },
   },
   async mounted() {
@@ -189,11 +215,17 @@ export default {
       this.username = profile.displayName
       this.profilePic = profile.pictureUrl || ''
       this.imageLoading = !!this.profilePic
+      this.storeInfo = await getAllStoreItems()
+      this.points = this.storeInfo.userPoints
     } finally {
       this.profileLoading = false
     }
   },
   methods: {
+    getFrameSrc(imageName: string): string {
+      return frameMap[imageName] ?? ''
+    },
+
     onImgLoad() {
       this.imageLoading = false
     },
@@ -202,30 +234,44 @@ export default {
       this.profilePic = ''
     },
 
-    canRedeem(f: StoreFrame) {
-      return !f.owned && this.points >= f.cost
+    canRedeem(f: StoreItem) {
+      if (this.points === null) return false
+      return !f.owned && this.points >= f.pointsRequired
     },
-    openConfirm(f: StoreFrame) {
+    openConfirm(f: StoreItem) {
       if (!this.canRedeem(f)) return
       this.pendingFrame = f
       this.showConfirm = true
+      console.log('Open confirm for', f)
     },
     closeConfirm() {
       this.showConfirm = false
       this.pendingFrame = null
     },
-    confirmRedeem() {
+    async confirmRedeem() {
       if (!this.pendingFrame) return
-      // ตัดแต้ม + ตั้ง owned
-      this.points -= this.pendingFrame.cost
-      this.pendingFrame.owned = true
-      // ปิด confirm แล้วเปิด success ชั่วครู่
-      this.showConfirm = false
-      this.showSuccess = true
-      if (this.successTimer) window.clearTimeout(this.successTimer)
-      this.successTimer = window.setTimeout(() => (this.showSuccess = false), 1200)
-      // ส่งอีเวนต์/เรียก API ที่นี่ได้ถ้าต้องการ
-      // await api.redeem(this.pendingFrame.id)
+      if (this.points === null) return
+      try {
+        // ปิด confirm
+        this.showConfirm = false
+        this.imageLoading = true
+        // api แลกของรางวัล
+        this.storeInfo = await redeemStoreItem(this.pendingFrame.id)
+        this.points = this.storeInfo.userPoints
+        this.$emit('update-info') // แจ้ง parent ให้รีเฟรชข้อมูล
+        // แสดง success แปปนึง
+        this.imageLoading = false
+        this.showSuccess = true
+        if (this.successTimer) window.clearTimeout(this.successTimer)
+        this.successTimer = window.setTimeout(() => (this.showSuccess = false), 1200)
+      } catch (error) {
+        console.error('Error redeeming store item:', error)
+        this.imageLoading = false
+        this.redeemError = error as Error
+        this.showError = true // + open error modal
+        if (this.errorTimer) window.clearTimeout(this.errorTimer)
+        this.errorTimer = window.setTimeout(() => (this.showError = false), 2200) // auto-hide
+      }
       this.pendingFrame = null
     },
   },
@@ -557,6 +603,37 @@ export default {
   place-items: center;
   font-size: 42px;
   font-weight: 700;
+}
+
+/* Error card */
+.error-card {
+  width: min(86vw, 320px);
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+.error-icon {
+  width: 84px;
+  height: 84px;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+  background: #fde2e2;
+  color: #c13535;
+  display: grid;
+  place-items: center;
+  font-size: 42px;
+  font-weight: 700;
+}
+.error-text-modal {
+  margin: 0;
+  color: #c13535;
+  font-family: 'Noto Looped Thai UI';
+  font-size: 16px;
+  line-height: 28px;
+  letter-spacing: 0.18px;
+  text-align: center;
 }
 
 /* prevent background scroll when modal open */

@@ -22,8 +22,8 @@
             @error="onImgError"
           />
           <img
-            v-if="selectedFrame?.img"
-            :src="selectedFrame.img"
+            v-if="selectedFrame?.imageName"
+            :src="getFrameSrc(selectedFrame.imageName)"
             alt="Profile frame"
             class="profile-frame"
           />
@@ -62,7 +62,7 @@
           :class="{ selected: selectedId === f.id }"
           @click="select(f.id)"
         >
-          <img :src="f.img" alt="" class="frame-img" />
+          <img :src="getFrameSrc(f.imageName)" alt="" class="frame-img" />
 
           <!-- selected & current -->
           <div v-if="selectedId === f.id && currentId === f.id" class="using-pill-center">
@@ -122,19 +122,28 @@
 </template>
 
 <script lang="ts">
-import { initializeLiff } from '../../utility/liffUtils'
+import { initializeLiff } from '@/services/liff.service'
 import liff from '@line/liff'
 import bgUrl from '@/assets/achievement/bg-blue.png'
 import { PhFloppyDisk, PhCheck } from '@phosphor-icons/vue'
 import type { CSSProperties } from 'vue'
-import frameAdult1 from '@/assets/frame/frameAdult1.png'
-import frameAdult2 from '@/assets/frame/frameAdult2.png'
-import frameElder1 from '@/assets/frame/frameElder1.png'
-import frameElder2 from '@/assets/frame/frameElder2.png'
+import type { Frame } from '@/types/achievement.types'
+import { getUserFrameInfo, setUserFrame } from '@/services/achievement.service'
+
+const frameMap = Object.fromEntries(
+  Object.entries(
+    import.meta.glob('@/assets/frame/*', {
+      eager: true,
+      import: 'default',
+      query: '?url',
+    }),
+  ).map(([path, url]) => [path.split('/').pop()!, url as string]),
+)
 
 export default {
   name: 'UserFrame',
   components: { PhFloppyDisk, PhCheck },
+  emits: ['update-info'],
   data() {
     return {
       username: '',
@@ -142,13 +151,7 @@ export default {
       profileLoading: true, // ระหว่างดึงข้อมูล LIFF
       imageLoading: false, // ระหว่างโหลดไฟล์รูป
       bgUrl,
-      frames: [
-        // สามารถเพิ่ม dx/dy/scale ต่อกรอบเพื่อจูนตำแหน่ง overlay บนโปรไฟล์ได้
-        { id: 1, img: frameAdult1, owned: true, scale: 1.6, dx: 0, dy: 0 },
-        { id: 2, img: frameAdult2, owned: true, scale: 1.6, dx: 0, dy: 0 },
-        { id: 3, img: frameElder1, owned: true, scale: 1.6, dx: 0, dy: 0 },
-        { id: 4, img: frameElder2, owned: false, scale: 1.6, dx: 0, dy: 0 },
-      ],
+      frames: [] as Frame[],
       currentId: null as number | null,
       selectedId: null as number | null,
       showSaved: false,
@@ -160,9 +163,15 @@ export default {
       return this.profileLoading || this.imageLoading
     },
     visibleFrames() {
-      return this.frames.filter((f) => f.owned)
+      return this.frames.filter((f) => f)
     },
-    selectedFrame(): { id: number; img: string; scale?: number; dx?: number; dy?: number } | null {
+    selectedFrame(): {
+      id: number
+      imageName: string
+      scale?: number
+      dx?: number
+      dy?: number
+    } | null {
       if (this.selectedId == null) return null
       return this.visibleFrames.find((f) => f.id === this.selectedId) || null
     },
@@ -187,11 +196,15 @@ export default {
       this.profilePic = profile.pictureUrl || ''
       // ถ้ามีรูปค่อยรอโหลดรูปให้เสร็จก่อน
       this.imageLoading = !!this.profilePic
+      // ดึงกรอบที่มี
+      const { currentFrame, frames } = await getUserFrameInfo(1.6, 0, 0)
+      this.currentId = currentFrame?.id ?? null
+      this.frames = frames
     } finally {
       this.profileLoading = false
     }
 
-    this.currentId = null
+    // Initialize selectedId to the current frame if available
     this.selectedId = this.currentId
   },
   watch: {
@@ -204,13 +217,21 @@ export default {
     document.body.classList.remove('modal-open')
   },
   methods: {
+    getFrameSrc(imageName: string): string {
+      return frameMap[imageName] ?? ''
+    },
     select(id: number | null) {
       if (id !== null && !this.visibleFrames.some((f) => f.id === id)) return
       this.selectedId = id
     },
-    save() {
+    async save() {
       // TODO: call API บันทึกจริง
+      if (this.selectedId === this.currentId) return
+      const { currentFrame, frames } = await setUserFrame(this.selectedId ?? 0)
+      this.frames = frames
+      this.selectedId = currentFrame?.id ?? null
       this.currentId = this.selectedId
+      this.$emit('update-info')
       this.showSaved = true
       if (this.timer) window.clearTimeout(this.timer)
       this.timer = window.setTimeout(() => (this.showSaved = false), 1200)

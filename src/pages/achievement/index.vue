@@ -3,17 +3,24 @@
     <!-- ส่วนหัว (พื้นหลังรูปภาพแบบ full-bleed) -->
     <section class="header-section" :style="{ backgroundImage: `url(${bgUrl})` }">
       <div class="header-inner">
-        <div v-if="profilePic" class="profile-pic-container">
-          <img :src="profilePic" alt="Profile Picture" class="profile-pic" />
+        <div class="profile-pic-container" :style="ringStyle">
+          <img v-if="profilePic" :src="profilePic" alt="Profile Picture" class="profile-pic" />
+          <div v-else class="placeholder">No Image</div>
+          <img
+            v-if="currentFrame?.imageName"
+            :src="getFrameSrc(currentFrame.imageName)"
+            alt="Profile frame"
+            class="profile-frame"
+          />
         </div>
-        <div v-else class="placeholder">No Image</div>
+
         <p v-if="username" class="username">{{ username }}</p>
       </div>
     </section>
 
     <!-- การ์ดสรุปที่ลอยทับ bg -->
     <div class="overlap-card">
-      <DuoStatus :points="10" :streaks="43" />
+      <DuoStatus :points="pageInfo?.totalPoints" :streaks="pageInfo?.streakDays" />
     </div>
 
     <!-- เนื้อหาอื่น ๆ -->
@@ -29,27 +36,33 @@
 
       <div v-if="showUserFrame" class="popup-overlay">
         <div class="popup-content">
-          <button @click="showUserFrame = false" class="back-button"><PhArrowLeft :size="20" />กลับ</button>
-          <UserFrame />
+          <button @click="showUserFrame = false" class="back-button">
+            <PhArrowLeft :size="20" />กลับ
+          </button>
+          <UserFrame @update-info="updateInfo" />
         </div>
       </div>
 
       <div v-if="showFrameStore" class="popup-overlay">
         <div class="popup-content">
-          <button @click="showFrameStore = false" class="back-button"><PhArrowLeft :size="20" />กลับ</button>
-          <FrameStore />
+          <button @click="showFrameStore = false" class="back-button">
+            <PhArrowLeft :size="20" />กลับ
+          </button>
+          <FrameStore @update-info="updateInfo" />
         </div>
       </div>
 
-      <ProgressCoin :streaks="75" />
-      <Mali :streaks="1" />
+      <ProgressCoin
+        :coinAchieves="pageInfo?.streakMedalAchievement"
+        :streaks="pageInfo?.coinProgress"
+      />
+      <Mali :totalDays="pageInfo?.maliProgress" />
       <AchieveShareButton />
     </main>
   </div>
 </template>
 
 <script lang="ts">
-import { initializeLiff } from '../../utility/liffUtils'
 import liff from '@line/liff'
 import DuoStatus from '../../components/achievement/DuoStatus.vue'
 import UserFrame from '../../components/achievement/UserFrame.vue'
@@ -58,26 +71,83 @@ import ProgressCoin from '../../components/achievement/ProgressCoin.vue'
 import Mali from '../../components/achievement/Mali.vue'
 import bgUrl from '@/assets/achievement/bg-blue.png'
 import { PhUserFocus, PhCoins, PhArrowLeft } from '@phosphor-icons/vue'
+import { getAchievementsPageInfo } from '@/services/achievement.service'
+import type { AchievementPageInfo } from '@/types/achievement.type'
+import { initializeLiff } from '@/services/liff.service'
+import type { StoreItem } from '@/types/achievement.types'
+import type { CSSProperties } from 'vue'
+
+const frameMap = Object.fromEntries(
+  Object.entries(
+    import.meta.glob('@/assets/frame/*', {
+      eager: true,
+      import: 'default',
+      query: '?url',
+    }),
+  ).map(([path, url]) => [path.split('/').pop()!, url as string]),
+)
 
 export default {
   name: 'AchievementIndex',
-  components: { DuoStatus, UserFrame, FrameStore, ProgressCoin, Mali, PhUserFocus, PhCoins, PhArrowLeft },
-  data() {
+  components: {
+    DuoStatus,
+    UserFrame,
+    FrameStore,
+    ProgressCoin,
+    Mali,
+    PhUserFocus,
+    PhCoins,
+    PhArrowLeft,
+  },
+  data(): {
+    username: string
+    profilePic: string
+    showUserFrame: boolean
+    showFrameStore: boolean
+    bgUrl: string
+    pageInfo: AchievementPageInfo | null
+    currentFrame: StoreItem | null
+  } {
     return {
       username: '',
       profilePic: '',
       showUserFrame: false,
       showFrameStore: false,
       bgUrl,
+      pageInfo: null,
+      currentFrame: null,
     }
   },
-  mounted() {
-    initializeLiff('VITE_LIFF_ID_ACHIEVEMENT').then(() => {
-      liff.getProfile().then((profile) => {
+  async mounted() {
+    await initializeLiff('VITE_LIFF_ID_ACHIEVEMENT').then(async () => {
+      await liff.getProfile().then((profile) => {
         this.username = profile.displayName
         this.profilePic = profile.pictureUrl || ''
       })
+      this.pageInfo = await getAchievementsPageInfo()
+      this.currentFrame = this.pageInfo?.currentFrame || null
     })
+  },
+  methods: {
+    getFrameSrc(imageName: string): string {
+      return frameMap[imageName] ?? ''
+    },
+    async updateInfo() {
+      this.pageInfo = await getAchievementsPageInfo()
+      this.currentFrame = this.pageInfo?.currentFrame || null
+    },
+  },
+  computed: {
+    ringStyle(): CSSProperties & Record<'--ring-scale' | '--ring-x' | '--ring-y', string> {
+      const scale = 1.6
+      const dx = 0
+      const dy = 0
+      return {
+        '--ring-scale': String(scale),
+        '--ring-x': `${dx}px`,
+        '--ring-y': `${dy}px`,
+      }
+    },
   },
 }
 </script>
@@ -105,13 +175,12 @@ body,
   flex-direction: column;
 
   /* ให้สูงเท่าหน้าจอ และสกอลล์ที่ตัวมันเอง */
-  height: 100dvh;                 /* ใช้ height แทน min-height */
+  height: 100dvh; /* ใช้ height แทน min-height */
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
   touch-action: pan-y;
 }
-
 
 /* ---- พื้นหลังส่วนหัว (full-bleed) ---- */
 .header-section {
@@ -165,18 +234,34 @@ body,
   justify-content: space-between;
 }
 
-/* ---- ของเดิม ---- */
+/* ---- ก็อปหน้า user frame มา ---- */
 .profile-pic-container {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  overflow: hidden;
+  position: relative;
+  width: clamp(88px, 30vw, 100px);
+  aspect-ratio: 1/1;
+  line-height: 0;
 }
 .profile-pic {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: 50%;
+  display: block;
+  position: relative;
+  z-index: 1;
 }
+.profile-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 2;
+  transform: translate(var(--ring-x, 0), var(--ring-y, 0)) scale(var(--ring-scale, 1));
+  transform-origin: center;
+}
+
 .placeholder {
   width: 100px;
   height: 100px;
@@ -251,7 +336,8 @@ body,
   height: 100%;
   width: 100%;
   text-align: center;
-  max-height: 100dvh; overflow: auto;
+  max-height: 100dvh;
+  overflow: auto;
 }
 .back-button {
   display: inline-flex;

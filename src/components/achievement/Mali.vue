@@ -5,7 +5,7 @@
     </div>
     <div class="gauge-bar">
       <div class="gauge-fill" :style="{ width: gaugePercentage + '%' }"></div>
-      <div class="gauge-text">{{ streaks }}/{{ nextThreshold }}</div>
+      <div class="gauge-text">{{ totalDays }}/{{ nextThreshold }}</div>
     </div>
     <div class="remaining-streaks">
       <span v-if="remainingStreaks > 0"
@@ -30,7 +30,7 @@ import starterImage from '@/assets/mali-level/mali level 0.png'
 export default {
   name: 'MaliComponent',
   props: {
-    streaks: {
+    totalDays: {
       type: Number,
       required: true,
     },
@@ -89,7 +89,7 @@ export default {
         this.maliData
           .slice()
           .reverse()
-          .find((item) => this.streaks >= item.threshold) || this.maliData[0]
+          .find((item) => this.totalDays >= item.threshold) || this.maliData[0]
       )
     },
     nextThreshold() {
@@ -105,7 +105,7 @@ export default {
       return this.maliData[currentIndex + 1] || this.currentMali
     },
     remainingStreaks() {
-      return Math.max((this.nextThreshold ?? 0) - this.streaks, 0)
+      return Math.max((this.nextThreshold ?? 0) - this.totalDays, 0)
     },
     gaugePercentage() {
       const currentThreshold = this.currentMali.threshold
@@ -113,7 +113,7 @@ export default {
       if (nextThreshold === currentThreshold) {
         return 100 // Max level
       }
-      return ((this.streaks - currentThreshold) / (nextThreshold - currentThreshold)) * 100
+      return ((this.totalDays - currentThreshold) / (nextThreshold - currentThreshold)) * 100
     },
   },
 }
