@@ -12,9 +12,15 @@
 
       <!-- Profile (ใหม่) -->
       <div class="profile">
-        <div class="avatar">
-          <img v-if="profileImage" :src="profileImage" :alt="profileName || 'โปรไฟล์'" />
+        <div class="avatar" :style="ringStyle">
+          <img
+            v-if="profileImage"
+            class="profile-pic"
+            :src="profileImage"
+            :alt="profileName || 'โปรไฟล์'"
+          />
           <div v-else class="avatar-fallback">{{ initials }}</div>
+          <img v-if="frameImage" :src="frameImage" alt="Profile frame" class="profile-frame" />
         </div>
         <div class="profile-name">{{ profileName || 'ผู้ใช้' }}</div>
       </div>
@@ -68,8 +74,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, nextTick, onMounted } from 'vue'
+import type { CSSProperties } from 'vue'
 import bgUrl from '@/assets/progress/stat/stat-bg.jpg'
+
+const ringStyle = computed(
+  (): CSSProperties & Record<'--ring-scale' | '--ring-x' | '--ring-y', string> => {
+    const scale = 1.6
+    const dx = 0
+    const dy = 0
+    return {
+      '--ring-scale': String(scale),
+      '--ring-x': `${dx}px`,
+      '--ring-y': `${dy}px`,
+    } as unknown as CSSProperties & Record<'--ring-scale' | '--ring-x' | '--ring-y', string>
+  },
+)
 
 type StatType = 'day' | 'week' | 'month'
 type MealStats = {
@@ -87,7 +107,12 @@ const props = defineProps<{
   stats?: MealStats
   profileName?: string
   profileImage?: string
+  frameImage?: string
 }>()
+
+onMounted(() => {
+  console.log('StatPoster mounted with frameImage:', props.frameImage)
+})
 
 const root = ref<HTMLElement | null>(null)
 const cssBg = computed(() => `url(${bgUrl})`)
@@ -371,24 +396,51 @@ defineExpose<StatPosterExpose>({ renderToBlob })
   gap: 120px;
   padding: 0 6px;
 }
-.avatar {
-  width: 190px !important;
+/* width: 190px !important;
   height: 190px !important;
   border-radius: 50%;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  aspect-ratio: 1/1;
 }
-.avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+*/
+
+.avatar {
+  position: relative;
+  width: 190px !important;
+  aspect-ratio: 1/1;
+  line-height: 0;
 }
+
 .avatar-fallback {
   font-size: 34px;
   color: #386496;
   line-height: 1;
+}
+
+.profile-pic {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+  position: relative;
+  z-index: 1;
+}
+
+.profile-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 2;
+  transform: translate(var(--ring-x, 0), var(--ring-y, 0)) scale(var(--ring-scale, 1));
+  transform-origin: center;
 }
 .profile-name {
   color: #194678;

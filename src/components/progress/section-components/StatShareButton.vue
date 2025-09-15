@@ -41,6 +41,7 @@
         :stats="stats"
         :profile-name="profileName"
         :profile-image="profileImage"
+        :frame-image="frameImage"
         style="position: fixed; left: -99999px; top: 0"
       />
     </template>
@@ -68,7 +69,7 @@
 
 <script setup lang="ts">
 import { Download, Forward, X } from 'lucide-vue-next'
-import { ref, watch, nextTick, computed } from 'vue'
+import { ref, watch, nextTick, computed, onMounted } from 'vue'
 import StatPoster, { type StatPosterExpose } from './StatPoster.vue'
 import liff from '@line/liff'
 import { uploadExportPoster } from '@/services/progress.service'
@@ -88,6 +89,7 @@ const props = defineProps<{
   stats?: MealStats
   profileName?: string
   profileImage?: string
+  frameImage?: string
 }>()
 
 const isOpen = ref(false)

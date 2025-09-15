@@ -208,3 +208,8 @@ export async function uploadExportPoster(file: File, uid: string) {
   )
   return response
 }
+
+export async function getUserCurrentFrame() {
+  const response = (await apiService.get)<string>(`/users/current-frame`)
+  return response
+}

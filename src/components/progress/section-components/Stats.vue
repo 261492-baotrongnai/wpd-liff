@@ -6,6 +6,7 @@
     :stats="today"
     :profile-name="profile?.displayName"
     :profile-image="profile?.pictureUrl"
+    :frame-image="frameImage"
   />
 
   <div class="separator"></div>
@@ -16,6 +17,7 @@
     :stats="week"
     :profile-name="profile?.displayName"
     :profile-image="profile?.pictureUrl"
+    :frame-image="frameImage"
   />
 
   <div class="separator"></div>
@@ -26,6 +28,7 @@
     :stats="month"
     :profile-name="profile?.displayName"
     :profile-image="profile?.pictureUrl"
+    :frame-image="frameImage"
   />
 </template>
 
@@ -36,6 +39,7 @@ import type { MealStats } from '../../../types/meal.types'
 import {
   getMonthSummary,
   getTodaySummary,
+  getUserCurrentFrame,
   getWeekSummary,
 } from '../../../services/progress.service'
 import SummaryFlex from './SummaryFlex.vue'
@@ -64,6 +68,21 @@ const profile = ref<
     }
   | undefined
 >(undefined)
+const frameImage = ref<string | undefined>(undefined)
+
+const frameMap = Object.fromEntries(
+  Object.entries(
+    import.meta.glob('@/assets/frame/*', {
+      eager: true,
+      import: 'default',
+      query: '?url',
+    }),
+  ).map(([path, url]) => [path.split('/').pop()!, url as string]),
+)
+
+function getFrameSrc(frameImage: string): string {
+  return frameMap[frameImage] ?? ''
+}
 
 onMounted(async () => {
   try {
@@ -83,6 +102,9 @@ onMounted(async () => {
     if (grade) {
       emit('updateGrade', grade)
     }
+
+    const imageName = await getUserCurrentFrame()
+    frameImage.value = getFrameSrc(imageName)
   } catch (error) {
     console.error('Error loading stats:', error)
   }
