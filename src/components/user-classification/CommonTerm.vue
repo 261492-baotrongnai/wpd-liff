@@ -108,7 +108,7 @@ export default {
       if (idToken) {
         const response = await register(idToken)
         if (response.type === 'NewUser')
-          await liff.sendMessages([{ type: 'text', text: 'ยันยันการบันทึกผู้ใช้' }])
+          await liff.sendMessages([{ type: 'text', text: 'ยืนยันการบันทึกผู้ใช้' }])
 
         liff.closeWindow()
       } else {
@@ -203,7 +203,7 @@ export default {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 4px; 
+  gap: 4px;
   color: #194678;
   font-size: 18px;
 }
