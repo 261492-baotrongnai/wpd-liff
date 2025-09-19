@@ -1,36 +1,76 @@
 <template>
+  <div ref="sentinel" class="sentinel" aria-hidden="true"></div>
   <!-- ส่วนหัว: แสดงเดือนและปีของวันที่เลือก -->
-  <div class="flex items-center justify-between px-4 mb-2">
-    <div class="date-container flex flex-row justify-between items-center px-2">
-      <p>
-        {{
-          modelValue
-            ? new DateFormatter('th-TH', { month: 'long', year: 'numeric' }).format(
-                modelValue.toDate(getLocalTimeZone()),
-              )
-            : 'Select a date'
-        }}
-      </p>
+  <div ref="stickyEl" class="sticky-date" :class="{ 'is-stuck': isStuck }">
+    <div class="flex items-center justify-between px-4 mb-2">
+      <div class="date-container flex flex-row justify-between items-center px-1">
+        <p>
+          {{
+            modelValue
+              ? new DateFormatter('th-TH', { month: 'long', year: 'numeric' }).format(
+                  modelValue.toDate(getLocalTimeZone()),
+                )
+              : 'Select a date'
+          }}
+        </p>
+      </div>
+
+      <!-- ปุ่มเปิดปฏิทิน -->
+      <UButton
+        color="neutral"
+        variant="ghost"
+        icon="i-lucide-calendar"
+        class="w-fit justify-center"
+        size="lg"
+        @click="isOpen = true"
+      />
     </div>
 
-    <!-- ปุ่มเปิดปฏิทิน -->
-    <UButton
-      color="neutral"
-      variant="ghost"
-      icon="i-lucide-calendar"
-      class="w-fit justify-center"
-      size="lg"
-      @click="isOpen = true"
-    />
+    <!-- แสดงวันในสัปดาห์แบบแนวนอน -->
+    <div class="w-full px-1 py-4">
+      <div class="horizontal-calendar flex justify-between">
+        <div
+          v-for="(day, idx) in selectedWeek"
+          :key="day.date.toISOString()"
+          class="date-inline"
+          :class="[
+            getColorByDate(day.date, 'horizontal-calendar'),
+            {
+              'selected-border-wrapper': isSameDate(day.date, modelValue),
+              'non-clickable': isFutureDate({
+                year: day.date.getFullYear(),
+                month: day.date.getMonth() + 1,
+                day: day.date.getDate(),
+              }),
+              'first-inline': idx === 0,
+              'last-inline': idx === selectedWeek.length - 1,
+            },
+          ]"
+          @click="
+            !isFutureDate({
+              year: day.date.getFullYear(),
+              month: day.date.getMonth() + 1,
+              day: day.date.getDate(),
+            }) && updateValue(day.calendarDate)
+          "
+        >
+          <div class="weekday-label">{{ day.weekday }}</div>
+          {{ day.date.getDate() }}
+          <div v-if="hasDateExists(day.date)" class="date-dot"></div>
+        </div>
+      </div>
+    </div>
   </div>
-
+  <!-- <div v-if="isFixed" :style="{ height: headerH + 'px' }"></div> -->
   <!-- Modal แสดงปฏิทิน -->
   <UModal
     v-model:open="isOpen"
-    :close="{
-      color: 'neutral',
-      variant: 'outline',
-      class: 'rounded-full',
+    teleport
+    :close="{ color: 'neutral', variant: 'outline', class: 'rounded-full' }"
+    :ui="{
+      wrapper: 'z-[15]', // ชั้นนอกสุด
+      overlay: 'fixed inset-0 z-[5] bg-black/40', // พื้นหลังเทาโปร่ง
+      content: 'bg-white rounded-2xl z-[950]', // พื้นหลังกล่อง
     }"
   >
     <template #body>
@@ -77,7 +117,7 @@
     </template>
 
     <!-- ปุ่มยืนยันการเลือกวัน -->
-    <template #footer>
+    <!-- <template #footer>
       <div class="flex justify-center w-full mt-2">
         <UButton
           color="neutral"
@@ -90,46 +130,13 @@
           ดูวันที่เลือก
         </UButton>
       </div>
-    </template>
+    </template> -->
   </UModal>
-
-  <!-- แสดงวันในสัปดาห์แบบแนวนอน -->
-  <div class="w-full px-4 py-4">
-    <div class="horizontal-calendar flex justify-between">
-      <div
-        v-for="day in selectedWeek"
-        :key="day.date.toISOString()"
-        class="date-inline"
-        :class="[
-          getColorByDate(day.date, 'horizontal-calendar'),
-          {
-            'selected-border-wrapper': isSameDate(day.date, modelValue),
-            'non-clickable': isFutureDate({
-              year: day.date.getFullYear(),
-              month: day.date.getMonth() + 1,
-              day: day.date.getDate(),
-            }),
-          },
-        ]"
-        @click="
-          !isFutureDate({
-            year: day.date.getFullYear(),
-            month: day.date.getMonth() + 1,
-            day: day.date.getDate(),
-          }) && updateValue(day.calendarDate)
-        "
-      >
-        <div class="weekday-label">{{ day.weekday }}</div>
-        {{ day.date.getDate() }}
-        <div v-if="hasDateExists(day.date)" class="date-dot"></div>
-      </div>
-    </div>
-  </div>
 </template>
 
 <script setup lang="ts">
 // import library ต่างๆ ที่ใช้จัดการวันที่และ reactive state
-import { computed, watch, shallowRef, ref } from 'vue'
+import { computed, watch, shallowRef, ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import {
   CalendarDate,
   BuddhistCalendar,
@@ -188,7 +195,7 @@ function onCalendarDayClick(date: Date) {
   const clicked = new Date(date)
   clicked.setHours(0, 0, 0, 0)
 
-  // ห้ามเลือกวันในอนาคต
+  // กันวันอนาคต
   if (clicked > today) return
 
   const calDate = new CalendarDate(
@@ -197,22 +204,30 @@ function onCalendarDayClick(date: Date) {
     clicked.getMonth() + 1,
     clicked.getDate(),
   )
+
+  // อัปเดตภายในไว้ด้วย (เพื่อให้ UI ในโมดัลทันสมัย)
   internalModelValue.value = calDate
+
+  // ⬇️ ยิงค่าออกไปให้ parent ทันที และปิดโมดัล
+  emit('update:modelValue', calDate)
+  closedByUserAction.value = true
+  isOpen.value = false
 }
+
 
 // ปุ่มยืนยันการเลือกวัน
-function handleConfirmClick() {
-  closedByUserAction.value = true
-  confirmSelectedDate()
-  isOpen.value = false
-}
+// function handleConfirmClick() {
+//   closedByUserAction.value = true
+//   confirmSelectedDate()
+//   isOpen.value = false
+// }
 
-// อัปเดตวันจริงเมื่อกด confirm
-function confirmSelectedDate() {
-  emit('update:modelValue', internalModelValue.value)
-  closedByUserAction.value = true
-  isOpen.value = false
-}
+// // อัปเดตวันจริงเมื่อกด confirm
+// function confirmSelectedDate() {
+//   emit('update:modelValue', internalModelValue.value)
+//   closedByUserAction.value = true
+//   isOpen.value = false
+// }
 
 // สร้าง array 7 วันจากวันปัจจุบัน (เพื่อแสดงแนวนอน)
 const selectedWeek = computed(() => {
@@ -313,6 +328,39 @@ function hasDateExists(date: Date): boolean {
   const dateKey = toLocalDateKey(date)
   return !!props.dateExists?.find((item) => item.date === dateKey)
 }
+
+// === Sticky header state (type-safe, no any) ===
+const sentinel = ref<HTMLElement | null>(null)
+const isStuck = ref(false)
+
+let io: IntersectionObserver | null = null
+// ...existing code...
+onMounted(async () => {
+  await nextTick()
+  // find the scroll container; must match the element that scrolls (progress-page)
+  const rootEl = document.querySelector('.progress-page') as HTMLElement | null
+
+  io = new IntersectionObserver(
+    (entries) => {
+      const e = entries[0]
+      isStuck.value = !e.isIntersecting
+    },
+    {
+      root: rootEl,
+      threshold: 0,
+      rootMargin: '0px 0px 0px 0px',
+    },
+  )
+
+  if (sentinel.value) {
+    io.observe(sentinel.value)
+  }
+})
+
+onBeforeUnmount(() => {
+  if (io && sentinel.value) io.unobserve(sentinel.value)
+  io = null
+})
 </script>
 
 <style scoped>
@@ -330,23 +378,49 @@ function hasDateExists(date: Date): boolean {
   justify-content: space-between;
   align-items: center;
   height: 50px;
+  padding: 0 16px;
 }
-
+.sticky-date {
+  position: sticky;
+  top: var(--app-nav-offset, 0px); /* ใช้ค่าที่วัดได้ */
+  z-index: 5; /* ให้ต่ำกว่า Nav */
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  will-change: transform, backdrop-filter;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+.sticky-date.is-stuck {
+  box-shadow: 0 8px 12px -8px rgba(195, 195, 195, 0.6);
+  background: rgba(242, 248, 252, 0.9);
+  -webkit-backdrop-filter: blur(5px); /* Safari */
+  backdrop-filter: blur(5px);
+}
 /* กล่องวันที่ในแนวนอน */
 .date-inline {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
-  flex: 1 1 0;         /* responsive width */
-  min-width: 32px;     /* กำหนดขั้นต่ำ */
+  flex: 1 1 0; /* responsive width */
+  min-width: 32px; /* กำหนดขั้นต่ำ */
   font-size: 18px;
   border-radius: 10px;
   height: 70px;
-  margin: 0 7px;       /* ระยะห่างซ้ายขวา */
+  margin: 0 7px; /* ระยะห่างซ้ายขวา */
   box-sizing: border-box;
   color: #194678;
   background-color: #eeeaea;
+}
+
+.first-inline {
+  margin-left: 0 !important;
+  margin-right: 7px !important;
+}
+.last-inline {
+  margin-right: 0 !important;
+  margin-left: 7px !important;
 }
 .horizontal-calendar {
   display: flex;
@@ -370,7 +444,7 @@ function hasDateExists(date: Date): boolean {
   color: #194678;
 }
 .grade-b.date-inline {
-  background-color: #cfe3ff;
+  background-color: #f8f0a6;
   color: #194678;
 }
 .grade-c.date-inline {
@@ -403,7 +477,7 @@ function hasDateExists(date: Date): boolean {
   color: #194678;
 }
 .grade-b.day-circle {
-  background-color: #cfe3ff;
+  background-color: #f8f0a6;
   color: #194678;
 }
 .grade-c.day-circle {
@@ -440,5 +514,20 @@ function hasDateExists(date: Date): boolean {
   color: #898989;
   opacity: 0.6;
   pointer-events: none;
+}
+@media (max-width: 320px) {
+  .date-inline {
+    margin: 0 3px; /* ลดจาก 7px เหลือ 3px */
+  }
+
+  .first-inline {
+    margin-left: 0 !important;
+    margin-right: 3px !important;
+  }
+
+  .last-inline {
+    margin-right: 0 !important;
+    margin-left: 3px !important;
+  }
 }
 </style>

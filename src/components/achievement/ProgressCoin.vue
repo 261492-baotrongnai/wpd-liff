@@ -1,18 +1,31 @@
 <template>
   <div class="box">
-    <h4>🏆 เหรียญสม่ำเสมอ</h4>
+    <p class="stat-title">
+      <img :src="icon" alt="" class="stat-icon" />
+      <span>สถิติบันทึกนานสุด</span>
+    </p>
+
     <div class="progress">
-      <div v-for="(item, index) in progressData" :key="index" class="progress-item-container">
-        <!-- Coin -->
-        <div
-          class="progress-item"
-          :style="{ backgroundColor: streaks >= item.threshold ? item.color : '#ccc' }"
-        >
-          <div class="coin">{{ item.days }}</div>
+      <div
+        v-for="(item, index) in progressData"
+        :key="item.threshold"
+        class="progress-item-container"
+      >
+        <!-- เหรียญ (ใช้รูปภาพ) -->
+        <div class="badge-wrap">
+          <img
+            class="badge"
+            :src="streaks >= item.threshold ? item.imgActive : item.imgInactive"
+            :alt="`${item.threshold}-day badge`"
+          />
         </div>
 
-        <!-- Line -->
-        <div v-if="index < progressData.length - 1" class="progress-line">
+        <!-- เส้นเชื่อม เปลี่ยนสีตาม stage -->
+        <div
+          v-if="index < progressData.length - 1"
+          class="progress-line"
+          :style="{ background: item.lineBase }"
+        >
           <div class="progress-line-fill" :style="getLineStyle(index)"></div>
         </div>
       </div>
@@ -21,40 +34,73 @@
 </template>
 
 <script lang="ts">
+import icon from '@/assets/achievement/active-stat-icon.png'
+
+// ✅ ใส่พาธรูปเหรียญของคุณเองให้ตรงตามโปรเจกต์
+// — Active
+import b10On from '@/assets/achievement/badges/10-on.png'
+import b30On from '@/assets/achievement/badges/30-on.png'
+import b60On from '@/assets/achievement/badges/60-on.png'
+import b90On from '@/assets/achievement/badges/90-on.png'
+// — Inactive
+import b10Off from '@/assets/achievement/badges/10-off.png'
+import b30Off from '@/assets/achievement/badges/30-off.png'
+import b60Off from '@/assets/achievement/badges/60-off.png'
+import b90Off from '@/assets/achievement/badges/90-off.png'
+
 export default {
   name: 'ProgressCoin',
   props: {
-    streaks: {
-      type: Number,
-      required: true,
-    },
+    coinAchieves: { type: Array, required: true },
+    streaks: { type: Number, required: true },
   },
   data() {
     return {
+      icon,
+      // กำหนดเหรียญ + สีเส้นของแต่ละสเตจ
       progressData: [
-        { days: '10 วัน', threshold: 10, color: '#2196f3' },
-        { days: '30 วัน', threshold: 30, color: '#4caf50' },
-        { days: '60 วัน', threshold: 60, color: '#ff9800' },
-        { days: '90 วัน', threshold: 90, color: '#f44336' },
+        {
+          threshold: 10,
+          imgActive: b10On,
+          imgInactive: b10Off,
+          lineBase: '#EFEFEF', // สีพื้นของเส้นช่วง 10→30
+          lineColor: '#B99F83', // สีตอนเติม
+        },
+        {
+          threshold: 30,
+          imgActive: b30On,
+          imgInactive: b30Off,
+          lineBase: '#EFEFEF',
+          lineColor: '#86A3BC',
+        },
+        {
+          threshold: 60,
+          imgActive: b60On,
+          imgInactive: b60Off,
+          lineBase: '#EFEFEF',
+          lineColor: '#FFD84D',
+        },
+        {
+          threshold: 90,
+          imgActive: b90On,
+          imgInactive: b90Off,
+        },
       ],
     }
   },
   methods: {
     getLineStyle(index: number) {
-      const currentThreshold = this.progressData[index].threshold
-      const nextThreshold = this.progressData[index + 1].threshold
+      const cur = this.progressData[index].threshold
+      const next = this.progressData[index + 1].threshold
+      const fill = this.progressData[index].lineColor
 
-      if (this.streaks >= nextThreshold) {
-        // Fully active line
-        return { width: '100%', backgroundColor: '#4caf50' }
-      } else if (this.streaks > currentThreshold) {
-        // Partially active line
-        const percentage =
-          ((this.streaks - currentThreshold) / (nextThreshold - currentThreshold)) * 100
-        return { width: `${percentage}%`, backgroundColor: '#4caf50' }
+      if (this.streaks >= next) {
+        return { width: '100%', background: fill }
+      } else if (this.streaks > cur) {
+        const pct = ((this.streaks - cur) / (next - cur)) * 100
+        return { width: `${pct}%`, background: fill }
       } else {
-        // Inactive line
-        return { width: '0%', backgroundColor: '#ccc' }
+        return { width: '0%', background: fill }
       }
     },
   },
@@ -62,61 +108,103 @@ export default {
 </script>
 
 <style scoped>
+/* กล่อง + เส้นบน/ล่าง ปลายมน */
 .box {
-  border-top: 1px solid #ccc; /* Line at the top */
-  border-bottom: 1px solid #ccc; /* Line at the bottom */
-  padding: 20px; /* Add some padding inside the box */
-  margin: 20px 0; /* Add spacing around the box */
+  position: relative;
+  padding: 20px 0 25px 0;
+  margin: 25px 0 25px 0;
+  background: #fff;
+}
+.box::before,
+.box::after {
+  content: '';
+  position: absolute;
+  left: 7px;
+  right: 7px;
+  height: 2.5px;
+  background: #eceff2;
+  border-radius: 999px;
+  z-index: 1;
+  pointer-events: none;
+}
+.box::before {
+  top: 0;
+}
+.box::after {
+  bottom: 0;
 }
 
+/* หัวข้อ */
+.stat-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  color: #194678;
+  font-size: 18px;
+  font-family: 'Noto Looped Thai UI';
+  font-weight: 600;
+}
+.stat-icon {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+}
+
+/* แถวเหรียญ + เส้นเชื่อม */
 .progress {
-  margin-top: 10px;
+  margin-top: 8px;
   display: flex;
-  flex-direction: row; /* Stack items horizontally */
-  align-items: center; /* Align items vertically */
-  gap: 4px; /* Add spacing between coins */
+  align-items: center;
+  gap: 8px;
 }
-
 .progress-item-container {
   display: flex;
   align-items: center;
-  flex-grow: 1; /* Allow the container to stretch dynamically */
+  flex-grow: 1;
 }
-
 .progress-item-container:last-child {
   max-width: fit-content;
 }
 
-.progress-item {
+.badge-wrap {
   display: flex;
-  justify-content: center;
   align-items: center;
-  width: 50px; /* Adjust the size of the coin */
-  height: 50px;
-  border-radius: 50%; /* Make it circular */
-  transition: background-color 0.3s ease;
+  justify-content: center;
+}
+.badge {
+  width: 60px; /* ปรับขนาดเหรียญที่นี่ */
+  height: 60px;
+  display: block;
 }
 
+/* เส้นเชื่อม */
 .progress-line {
-  margin-left: 4px;
-  flex-grow: 1; /* Allow the line to stretch dynamically */
-  height: 2px; /* Adjust the thickness of the line */
-  background-color: #ccc; /* Default line color */
+  margin-left: 8px;
+  flex-grow: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: #e0e6eb; /* จะถูก override ด้วย :style lineBase */
   position: relative;
+  overflow: hidden;
 }
-
 .progress-line-fill {
-  height: 100%;
-  background-color: #4caf50; /* Active line color */
   position: absolute;
   top: 0;
   left: 0;
+  height: 100%;
+  border-radius: 999px;
   transition: width 0.3s ease;
 }
 
-.coin {
-  font-size: 14px;
-  color: #fff; /* White text for better contrast */
-  text-align: center;
+/* จอแคบ */
+@media (max-width: 360px) {
+  .badge {
+    width: 50px;
+    height: 50px;
+  }
+  .progress-line {
+    height: 4px;
+  }
 }
 </style>

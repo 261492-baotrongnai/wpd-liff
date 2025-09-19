@@ -1,12 +1,12 @@
 <template>
   <div class="page-bg">
     <div class="progress-page" v-if="!loading">
-      <ProgressNav @updateSection="updateSection" />
+      <ProgressNav  @updateSection="updateSection" />
       <ProgressSection :selectedSection="section" @updateGrade="updateGrade" />
     </div>
-    <div v-else class="flex flex-col gap-4 w-full items-center justify-center">
+    <div v-else class="flex flex-col gap-4 w-full items-center justify-center py-6">
       <USkeleton class="h-[62px] w-[433px] rounded-lg bg-[#ECEFF2]" />
-      <USkeleton class="h-[100px] w-[433px] rounded-lg bg-[#ECEFF2]" />
+      <USkeleton class="h-[100px] w-[433px] rounded-lg bg-[#ECEFF2] pt-5" />
       <USkeleton class="h-[30px] w-[103px] rounded-lg bg-[#ECEFF2]" />
       <USkeleton class="h-[1px] w-[80%] rounded-lg bg-[#ECEFF2]" />
       <USkeleton class="h-[20px] w-[123px] rounded-lg bg-[#ECEFF2]" />
@@ -60,14 +60,30 @@ export default {
 </script>
 
 <style scoped>
+html,
+body,
+#app {
+  height: 100svh;
+  margin: 0;
+}
+* {
+  box-sizing: border-box;
+}
 .page-bg {
-  background-color: #F2F8FC;
-  min-height: 100vh;
+  background-color: #f2f8fc;
+  min-height: 100dvh;
+  overflow-x: hidden;
 }
 .progress-page {
+  height: 100vh; /* ให้เต็ม viewport */
+  max-height: 100svh;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 13px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  position: relative;
 }
 .share-button {
   background-color: #b5e1c2;

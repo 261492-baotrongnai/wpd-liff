@@ -142,7 +142,7 @@ export class AuthService {
 
       // Store the token
       this.saveToken(accessToken)
-      console.log('User logged in successfully')
+      console.log('User logged in successfullyyyy')
       return true
     } catch (error) {
       console.error('Login failed:', error)

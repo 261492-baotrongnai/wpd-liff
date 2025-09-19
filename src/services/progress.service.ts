@@ -101,7 +101,7 @@ export async function formatMealInfoForCard(meals: Meal[]): Promise<TimeMeal[] |
     }
     const timeMeals: Record<string, Meal[]> = {}
     meals.forEach((meal) => {
-      const mealTime = new Date(meal.createdAt).toLocaleTimeString([], {
+      const mealTime = new Date(meal.createdAt).toLocaleTimeString('th-TH', {
         hour: '2-digit',
         minute: '2-digit',
         hour12: false, // Use 24-hour format
@@ -193,5 +193,23 @@ export async function getWeekSummary(): Promise<MealStats | undefined> {
 
 export async function getMonthSummary(): Promise<MealStats | undefined> {
   const response = await apiService.get<MealStats>(`/meals/month-summary`)
+  return response
+}
+
+export async function uploadExportPoster(file: File, uid: string) {
+  const response = await apiService.post(
+    `/user-states/upload-export-poster`,
+    { file, uid },
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    },
+  )
+  return response
+}
+
+export async function getUserCurrentFrame() {
+  const response = (await apiService.get)<string>(`/users/current-frame`)
   return response
 }

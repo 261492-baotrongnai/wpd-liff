@@ -113,9 +113,9 @@ export default {
       if (idToken) {
         const response = await register(idToken, this.code)
         if (response.type === 'NewUser')
-          await liff.sendMessages([{ type: 'text', text: 'ยันยันการบันทึกผู้ใช้' }])
+          await liff.sendMessages([{ type: 'text', text: 'ยืนยันการบันทึกผู้ใช้' }])
         else if (response.type === 'User')
-          await liff.sendMessages([{ type: 'text', text: 'ยันยันการแก้ไขโค้ด' }])
+          await liff.sendMessages([{ type: 'text', text: 'ยืนยันการแก้ไขโค้ด' }])
         liff.closeWindow()
       } else {
         console.error('ID Token is null')

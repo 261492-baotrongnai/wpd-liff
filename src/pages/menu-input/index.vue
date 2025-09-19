@@ -70,35 +70,64 @@
       </div>
     </div>
   </div>
-  <div v-if="loading" class="flex flex-col gap-2">
-    <div class="flex flex-col mt-4 gap-2 justify-center items-center">
-      <USkeleton class="w-[250px] h-[20px]" />
-      <USkeleton class="w-[300px] h-[20px]" />
-      <USkeleton class="w-[250px] h-[20px]" />
-    </div>
-    <div class="flex flex-col gap-2 justify-center items-center">
-      <div class="flex flex-row gap-2 mb-2 items-center">
-        <USkeleton class="w-[150px] h-[80px]" />
-        <USkeleton class="w-[150px] h-[80px]" />
+  <!-- Loading Skeleton (ตรงตามเลย์เอาต์จริง) -->
+  <!-- Loading Skeleton (ตรงตามเลย์เอาต์จริง) -->
+  <div v-if="loading" class="page-bg">
+    <div class="menu-section-wrapper">
+      <!-- Instruction (ภาพ + ข้อความทับ) -->
+      <div class="relative flex flex-col items-center justify-center">
+        <!-- พื้นที่ภาพ bg-text -->
+        <USkeleton class="bg-[#e5e7eb] w-[calc(100%-20px)] max-w-[460px] h-[90px]" />
       </div>
-      <div class="flex flex-row gap-2 mb-2 items-center">
-        <USkeleton class="w-[150px] h-[80px]" />
-        <USkeleton class="w-[150px] h-[80px]" />
-      </div>
-    </div>
-    <div class="flex flex-col gap-2 justify-center items-center m-4">
-      <div class="flex flex-row gap-2">
-        <div class="flex flex-col gap-2 justify-start">
-          <USkeleton class="w-[100px] h-[20px]" />
-          <USkeleton class="w-[300px] h-[30px]" />
-        </div>
-        <div class="content-end">
-          <USkeleton class="w-[80px] h-[30px]" />
+
+      <!-- Candidates 2x2 Grid -->
+      <div class="input-candidates mt-0 mb-3">
+        <div class="candidates-grid">
+          <USkeleton class="skeleton-candidate bg-[#e5e7eb]" />
+          <USkeleton class="skeleton-candidate bg-[#e5e7eb]" />
+          <USkeleton class="skeleton-candidate bg-[#e5e7eb]" />
+          <USkeleton class="skeleton-candidate bg-[#e5e7eb]" />
         </div>
       </div>
-      <USkeleton class="w-[300px] h-[40px]" />
+    </div>
+
+    <!-- Input Row: header + textarea + clear button -->
+    <div class="input-row px-2">
+      <div class="input-area">
+        <!-- Header: icon + label + counter -->
+        <div class="input-header">
+          <div class="skeleton-circle bg-[#e5e7eb]" aria-hidden="true"></div>
+          <USkeleton class="h-[20px] w-[120px] rounded-[4px] bg-[#e5e7eb]" />
+          <div class="ml-auto">
+            <USkeleton class="h-[16px] w-[64px] rounded-[4px] bg-[#e5e7eb]" />
+          </div>
+        </div>
+
+        <!-- Textarea -->
+        <USkeleton class="w-full h-[96px] rounded-[6px] bg-[#e5e7eb]" />
+      </div>
+
+      <!-- Clear button -->
+      <div class="clear-button-wrapper">
+        <USkeleton class="h-[36px] w-[50px] rounded-[8px] bg-[#e5e7eb]" />
+      </div>
+    </div>
+
+    <!-- Submit button -->
+    <div class="submit-button-wrapper">
+      <USkeleton class="h-[55px] w-[257px] rounded-[15px] bg-[#e5e7eb]" />
     </div>
   </div>
+
+  <!-- Loader Overlay (เต็มจอ) -->
+  <teleport to="body">
+    <div v-if="isSaving" class="saving-overlay" role="alert" aria-busy="true">
+      <div class="saving-box">
+        <span class="saving-spinner" aria-hidden="true"></span>
+        <div class="saving-text">กำลังบันทึกชื่อเมนูนี้</div>
+      </div>
+    </div>
+  </teleport>
 </template>
 
 <script lang="ts">
@@ -120,6 +149,7 @@ export default {
       value: ref(''),
       maxLength: 200,
       showModal: false,
+      isSaving: false,
     }
   },
 
@@ -150,6 +180,7 @@ export default {
 
       if (menuText.trim()) {
         console.log('Sending menu name:', menuText)
+        this.isSaving = true
         liff
           .sendMessages([
             {
@@ -161,10 +192,12 @@ export default {
             console.log('Message sent successfully')
             this.value = '' // Clear the input field after sending
             this.menu_name = ''
+            this.isSaving = false
             liff.closeWindow() // Close the LIFF window
           })
           .catch((error) => {
             console.error('Error sending message:', error)
+            this.isSaving = false
           })
       } else {
         console.error('Menu name cannot be empty')
@@ -189,10 +222,6 @@ export default {
   },
 
   async mounted() {
-    // MOCK ข้อมูลสำหรับ dev
-    // this.candidates = ['ข้าวผัดหมู', 'ส้มตำปูปลาร้า', 'ข้าวต้ม', 'ผัดไทย']
-    // this.loading = false
-    // ถ้าต้องการใช้ API จริง ให้ comment ส่วน mock ข้างบน แล้วใช้โค้ดนี้แทน
     await initializeLiff('VITE_LIFF_ID_MENU_INPUT')
     await getMenuCandidates().then((candidates) => {
       this.candidates = candidates
@@ -333,33 +362,52 @@ export default {
   box-sizing: border-box;
 }
 
-.submit-button {
-  color: #333333;
-  border: none;
-  border-radius: 5px;
-  width: 257px;
-  height: 55px;
-  margin-top: 39px;
-  text-align: center;
-  position: relative;
-  background-image: url('../../assets/menu-input/save.svg');
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 257px 55px; /* ปรับขนาดตามต้องการ */
-  text-align: center;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  gap: 10px;
-}
-
 .submit-button-wrapper {
   width: 100%;
   max-width: 350px;
   margin-top: 20px;
+  display: flex;
+  justify-content: center; /* จัดปุ่มให้อยู่กลาง */
+}
+
+.submit-button {
+  /* ขนาด + พื้นหลังตามที่ขอ */
+  width: 257px;
+  height: 55px;
+  flex-shrink: 0;
+  border-radius: 15px;
+  background: #d2ecc0;
+  box-shadow:
+    -4px -4px 2px 0 #cce5bb inset,
+    4px 4px 2px 0 #e0f0d5 inset;
+
+  /* โครงสร้างปุ่ม */
+  border: 0;
+  color: #333333;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition:
+    transform 0.06s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
+}
+
+/* เอฟเฟกต์เล็กน้อย */
+.submit-button:hover {
+  filter: brightness(1.02);
+}
+.submit-button:active {
+  transform: translateY(1px);
+  box-shadow:
+    -2px -2px 1px 0 #cce5bb inset,
+    2px 2px 1px 0 #e0f0d5 inset;
+}
+.submit-button:focus-visible {
+  outline: 2px solid #19467833;
+  outline-offset: 2px;
 }
 
 .save-text {
@@ -545,5 +593,68 @@ export default {
   font-size: 18px;
   font-weight: 500;
   cursor: pointer;
+}
+/* ให้ขนาดสเกเลตันของ candidate เท่ากับการ์ดจริง */
+.skeleton-candidate {
+  width: 100%;
+  min-height: 60px;
+  border-radius: 10px;
+}
+
+/* วงกลมแทนไอคอนดินสอ (18px) */
+.skeleton-circle {
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background-color: #e5e7eb; /* เทาอ่อนคล้าย USkeleton */
+  flex-shrink: 0;
+}
+
+/* ปรับตำแหน่ง instruction-wrapper เวลาโหลด เพื่อกัน shift */
+.instruction-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: fit-content;
+  margin: -50px auto 10px auto;
+}
+
+.saving-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 2000;
+  display: grid;
+  place-items: center;
+}
+.saving-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: #fff;
+  text-align: center;
+  font-family: 'Noto Looped Thai UI';
+}
+.saving-spinner {
+  width: 52px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(farthest-side, #9ac8ea 94%, #0000) top/8px 8px no-repeat,
+    conic-gradient(#0000 30%, #9ac8ea);
+  -webkit-mask: radial-gradient(farthest-side, #0000 calc(100% - 8px), #000 0);
+  mask: radial-gradient(farthest-side, #0000 calc(100% - 8px), #000 0);
+  animation: saving-rotate 1s linear infinite;
+}
+@keyframes saving-rotate {
+  100% {
+    transform: rotate(1turn);
+  }
+}
+.saving-text {
+  font-size: 18px;
+  font-weight: 500;
 }
 </style>

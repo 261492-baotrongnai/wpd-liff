@@ -1,3 +1,4 @@
+
 <!-- HowToUsePage.vue -->
 <template>
   <div class="page">
