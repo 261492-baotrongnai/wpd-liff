@@ -7,7 +7,7 @@
     <div class="video-frame">
       <iframe
         class="player"
-        src="https://www.youtube.com/embed/_GJLLU2w4Xo"
+        src="https://www.youtube.com/embed/k6topDOD6MY"
         title="วิดีโอสาธิตการใช้"
         frameborder="0"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
