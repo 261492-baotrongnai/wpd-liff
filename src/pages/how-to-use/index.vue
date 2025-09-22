@@ -7,10 +7,43 @@
       <img class="bg" src="@/assets/how-to-use/bg.png" alt="" aria-hidden="true" />
       <img class="banner-img" src="@/assets/how-to-use/nurse.png" alt="คู่มือใช้งาน หวานพอดี" />
     </section>
+    <p class="intro">
+      แต่ละฟีเจอร์ใช้ยังไง กดดูวิดีโอได้เลย
+      <PhArrowCircleDown :size="24" class="icon-arrow" />
+    </p>
+    <section class="vdo" v-if="!activeFeature">
+      <button
+        type="button"
+        class="feature-card"
+        :class="{ 'is-pressed': pressedMore }"
+        @click="openTutorial"
+        @pointerdown="pressedMore = true"
+        @pointerup="pressedMore = false"
+        @pointerleave="pressedMore = false"
+        @touchend="pressedMore = false"
+        @keydown.space.prevent="
+          pressedMore = true;
+          openTutorial()
+        "
+        @keydown.enter.prevent="
+          pressedMore = true;
+          openTutorial()
+        "
+      >
+        <span class="icon-wrap">
+          <PhYoutubeLogo :size="56" class="icon-svg" aria-hidden="true" />
+        </span>
+        <span class="text-wrap">
+          <h2 class="feat-title">วิดีโอสาธิตการใช้</h2>
+        </span>
+      </button>
+    </section>
+
+    <div class="separator-vdo"></div>
 
     <!-- Intro -->
     <p class="intro">
-      แต่ละฟีเจอร์ใช้ยังไง กดดูได้เลย
+      แต่ละฟีเจอร์ใช้ยังไง กดอ่านได้เลย
       <PhArrowCircleDown :size="24" class="icon-arrow" />
     </p>
 
@@ -53,12 +86,15 @@
       <EatCheck v-else-if="activeFeature === 'can-eat'" @back="activeFeature = null" />
       <HistoryHowToUse v-else-if="activeFeature === 'history'" @back="activeFeature = null" />
       <AchievementHowToUse v-else-if="activeFeature === 'points'" @back="activeFeature = null" />
+      <TutorialVDO v-else-if="activeFeature === 'tutorial'" @back="activeFeature = null" />
     </section>
 
     <div class="separator"></div>
 
     <!-- หัวข้อเกณฑ์ -->
-    <p class="intro">เกณฑ์การจัดเกรด กดดูได้เลย <PhArrowCircleDown :size="24" class="icon-arrow" /></p>
+    <p class="intro">
+      เกณฑ์การจัดเกรด กดดูได้เลย <PhArrowCircleDown :size="24" class="icon-arrow" />
+    </p>
 
     <!-- ปุ่มแยก “ดูข้อมูลเพิ่มเติม” (สไตล์เดียวกับปุ่มด้านบน) -->
     <section class="more-info" v-if="!activeFeature">
@@ -71,8 +107,14 @@
         @pointerup="pressedMore = false"
         @pointerleave="pressedMore = false"
         @touchend="pressedMore = false"
-        @keydown.space.prevent="pressedMore = true; openCriteria()"
-        @keydown.enter.prevent="pressedMore = true; openCriteria()"
+        @keydown.space.prevent="
+          pressedMore = true;
+          openCriteria()
+        "
+        @keydown.enter.prevent="
+          pressedMore = true;
+          openCriteria()
+        "
       >
         <span class="icon-wrap">
           <PhInfo :size="56" class="icon-svg" aria-hidden="true" />
@@ -86,7 +128,7 @@
     <!-- ✅ OVERLAY เต็มหน้า สำหรับ FYI -->
     <transition name="fade">
       <div v-if="activeFeature === 'criteria'" class="overlay" role="dialog" aria-modal="true">
-        <FYIInfo @back="activeFeature = null"/>
+        <FYIInfo @back="activeFeature = null" />
       </div>
     </transition>
   </div>
@@ -94,7 +136,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { PhArrowCircleDown, PhInfo} from '@phosphor-icons/vue'
+import { PhArrowCircleDown, PhInfo, PhYoutubeLogo } from '@phosphor-icons/vue'
 import iconRecord from '@/assets/how-to-use/record.png'
 import iconEat from '@/assets/how-to-use/eat.png'
 import iconDiary from '@/assets/how-to-use/diary.png'
@@ -103,9 +145,9 @@ import RecordFood from '@/components/how-to-use/Record.vue'
 import EatCheck from '@/components/how-to-use/EatCheck.vue'
 import HistoryHowToUse from '@/components/how-to-use/History.vue'
 import AchievementHowToUse from '@/components/how-to-use/Achievement.vue'
-import FYIInfo from '@/components/how-to-use/FYI.vue'  // ✅ ใช้งานจริง
-
-type FeatureKey = 'record' | 'can-eat' | 'history' | 'points' | 'criteria'
+import FYIInfo from '@/components/how-to-use/FYI.vue' // ✅ ใช้งานจริง
+import TutorialVDO from '@/components/how-to-use/TutorialVDO.vue'
+type FeatureKey = 'record' | 'can-eat' | 'history' | 'points' | 'criteria' | 'tutorial'
 interface Feature {
   key: FeatureKey
   title: string
@@ -119,34 +161,70 @@ export default defineComponent({
     PhArrowCircleDown,
     PhInfo,
     RecordFood,
+    PhYoutubeLogo,
     EatCheck,
     HistoryHowToUse,
     AchievementHowToUse,
-    FYIInfo,           // ✅ ลงทะเบียนใช้งาน
+    FYIInfo,
+    TutorialVDO,
   },
   data() {
     return {
       features: [
-        { key: 'record',  title: 'บันทึกอาหารที่ทาน',  subtitle: 'เพิ่มเมนูที่คุณกินในแต่ละมื้อ', icon: iconRecord },
-        { key: 'can-eat', title: 'กินได้ก่อ',           subtitle: 'อยากรู้ว่าเมนูนี้ทานดีไหม',      icon: iconEat },
-        { key: 'history', title: 'ดูบันทึกย้อนหลัง',     subtitle: 'เปิดดูเมนูที่เคยบันทึกไว้',     icon: iconDiary },
-        { key: 'points',  title: 'แต้มสะสม',            subtitle: 'สะสมแต้มจากการบันทึก',         icon: iconAchievement },
+        {
+          key: 'record',
+          title: 'บันทึกอาหารที่ทาน',
+          subtitle: 'เพิ่มเมนูที่คุณกินในแต่ละมื้อ',
+          icon: iconRecord,
+        },
+        {
+          key: 'can-eat',
+          title: 'กินได้ก่อ',
+          subtitle: 'อยากรู้ว่าเมนูนี้ทานดีไหม',
+          icon: iconEat,
+        },
+        {
+          key: 'history',
+          title: 'ดูบันทึกย้อนหลัง',
+          subtitle: 'เปิดดูเมนูที่เคยบันทึกไว้',
+          icon: iconDiary,
+        },
+        {
+          key: 'points',
+          title: 'แต้มสะสม',
+          subtitle: 'สะสมแต้มจากการบันทึก',
+          icon: iconAchievement,
+        },
       ] as Feature[],
       pressedIndex: null as number | null,
       activeFeature: null as FeatureKey | null,
       pressedMore: false as boolean,
+      activeTutorial: false as boolean,
     }
   },
   methods: {
-    onPressStart(i: number) { this.pressedIndex = i },
-    onPressEnd() { this.pressedIndex = null },
+    onPressStart(i: number) {
+      this.pressedIndex = i
+    },
+    onPressEnd() {
+      this.pressedIndex = null
+    },
     onKeyPress(i: number) {
       this.pressedIndex = i
       setTimeout(() => (this.pressedIndex = null), 120)
       this.onFeatureClick(this.features[i])
     },
-    onFeatureClick(f: Feature) { this.activeFeature = f.key },
-    openCriteria() { this.activeFeature = 'criteria'; this.pressedMore = false },
+    onFeatureClick(f: Feature) {
+      this.activeFeature = f.key
+    },
+    openCriteria() {
+      this.activeFeature = 'criteria'
+      this.pressedMore = false
+    },
+    openTutorial() {
+      this.activeFeature = 'tutorial'
+      this.pressedMore = false
+    },
   },
 })
 </script>
@@ -173,7 +251,9 @@ export default defineComponent({
   padding-bottom: 20px;
 }
 .bg,
-.banner-img { grid-area: 1 / 1; }
+.banner-img {
+  grid-area: 1 / 1;
+}
 .bg {
   width: 100%;
   height: auto;
@@ -200,8 +280,9 @@ export default defineComponent({
   line-height: 28px;
   letter-spacing: 0.18px;
 }
-.icon-arrow { margin-top: 4px; }
-
+.icon-arrow {
+  margin-top: 4px;
+}
 /* ===== FEATURES ===== */
 .features {
   display: flex;
@@ -241,7 +322,10 @@ export default defineComponent({
   appearance: none;
   touch-action: manipulation;
   user-select: none;
-  transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease,
+    filter 0.12s ease;
 }
 .feature-card.is-pressed {
   transform: translateY(2px) scale(0.995);
@@ -260,12 +344,33 @@ export default defineComponent({
 }
 
 /* ไอคอน + ข้อความ */
-.icon-wrap { display: grid; place-items: center; }
-.icon { width: 56px; height: 56px; object-fit: contain; display: block; }
-.icon--record, .icon--history { margin-left: 6px; }
-.icon-svg { width:56px; height:56px; color:#1e5898; display:block; }
+.icon-wrap {
+  display: grid;
+  place-items: center;
+}
+.icon {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  display: block;
+}
+.icon--record,
+.icon--history {
+  margin-left: 6px;
+}
+.icon-svg {
+  width: 56px;
+  height: 56px;
+  color: #1e5898;
+  display: block;
+}
 
-.text-wrap { display: flex; flex-direction: column; text-align: left; width: 100%; }
+.text-wrap {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  width: 100%;
+}
 .feat-title {
   margin: 0 0 2px;
   color: #1e5898;
@@ -293,8 +398,18 @@ export default defineComponent({
   margin-bottom: 19px;
 }
 
+.separator-vdo {
+  width: calc(100% - 60px);
+  height: 2px;
+  background: #e6e4e4;
+  border-radius: 10px;
+  margin-bottom: 19px;
+  margin-top: 24px;
+}
+
 /* ปุ่มดูรายละเอียดเกณฑ์ (คงสไตล์การ์ด) */
-.more-info {
+.more-info,
+.vdo {
   width: var(--content-w);
   margin: 18px 0 0;
   display: flex;
@@ -302,24 +417,34 @@ export default defineComponent({
 }
 
 /* หน้ารายละเอียดฟีเจอร์ทั่วไป */
-.feature-detail { width: 100%; display: grid; place-items: center; }
+.feature-detail {
+  width: 100%;
+  display: grid;
+  place-items: center;
+}
 
 /* =========================
    ✅ OVERLAY เต็มหน้า FYI
    ========================= */
-.fade-enter-active, .fade-leave-active { transition: opacity .18s ease; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.18s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
 
-.overlay{
+.overlay {
   position: fixed;
   inset: 0;
-  z-index: 999;              /* อยู่บนสุด */
+  z-index: 999; /* อยู่บนสุด */
   background: #ffffff;
   display: flex;
   flex-direction: column;
 }
 
-.overlay-header{
+.overlay-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -328,7 +453,7 @@ export default defineComponent({
   border-bottom: 1px solid #eaeef5;
   background: #f9fbff;
 }
-.overlay-back{
+.overlay-back {
   position: absolute;
   top: 12px;
   left: 12px;
@@ -345,24 +470,27 @@ export default defineComponent({
   font-size: 16px;
   box-shadow: 0 2px 6px rgba(34, 78, 126, 0.12);
 }
-.overlay-title{
+.overlay-title {
   margin: 0;
   color: #1e5898;
   font-family: 'Noto Looped Thai UI';
   font-size: 18px;
   font-weight: 700;
 }
-.overlay-spacer{ width: 48px; height: 1px; } /* เพื่อบาลานซ์ layout ฝั่งขวา */
+.overlay-spacer {
+  width: 48px;
+  height: 1px;
+} /* เพื่อบาลานซ์ layout ฝั่งขวา */
 
-.overlay-body{
+.overlay-body {
   flex: 1 1 auto;
-  overflow-y: auto;                /* เลื่อนใน overlay */
+  overflow-y: auto; /* เลื่อนใน overlay */
   -webkit-overflow-scrolling: touch;
   padding: 12px 16px 24px;
 }
 
 /* เผื่อกรณี CriteriaDoc มี .page แบบ overlay ของตัวเอง ให้คืนค่าปกติ */
-.overlay :deep(.page){
+.overlay :deep(.page) {
   position: static !important;
   inset: auto !important;
   height: auto !important;
@@ -382,7 +510,9 @@ export default defineComponent({
 }
 
 @media screen and (max-width: 330px) {
-  .feat-title { font-size: 20px; }
+  .feat-title {
+    font-size: 20px;
+  }
 }
 @media screen and (min-width: 426px) {
   .hero {
