@@ -20,7 +20,7 @@
 
     <!-- การ์ดสรุปที่ลอยทับ bg -->
     <div class="overlap-card">
-      <DuoStatus :points="pageInfo?.totalPoints" :streaks="pageInfo?.streakDays" />
+      <DuoStatus :points="pageInfo?.totalPoints ?? 0" :streaks="pageInfo?.streakDays ?? 0" />
     </div>
 
     <!-- เนื้อหาอื่น ๆ -->
@@ -53,11 +53,26 @@
       </div>
 
       <ProgressCoin
-        :coinAchieves="pageInfo?.streakMedalAchievement"
-        :streaks="pageInfo?.coinProgress"
+        :coinAchieves="
+          Array.isArray(pageInfo?.streakMedalAchievement) ? pageInfo.streakMedalAchievement : []
+        "
+        :streaks="Number(normalizedCoin.current)"
       />
-      <Mali :totalDays="pageInfo?.maliProgress" />
-      <AchieveShareButton />
+
+      <Mali :totalDays="normalizedMali.current" />
+
+      <!-- Share Button + โปสเตอร์ (ส่งรูป coin + มะลิ + target ที่ถูกต้อง) -->
+      <AchieveShareButton
+        :profile-name="username"
+        :profile-image="profilePic"
+        :frame-image="currentFrame?.imageName ? getFrameSrc(currentFrame.imageName) : ''"
+        :points="pageInfo?.totalPoints ?? 0"
+        :streaks="normalizedCoin"
+        :coin-stages="coinStagesForPoster"
+        :mali-days="normalizedMali.current"
+        :mali-target="normalizedMali.target"
+        :mali-image="maliImageForPoster"
+      />
     </main>
   </div>
 </template>
@@ -69,21 +84,49 @@ import UserFrame from '../../components/achievement/UserFrame.vue'
 import FrameStore from '../../components/achievement/FrameStore.vue'
 import ProgressCoin from '../../components/achievement/ProgressCoin.vue'
 import Mali from '../../components/achievement/Mali.vue'
+import AchieveShareButton from '../../components/achievement/AchieveShareButton.vue'
 import bgUrl from '@/assets/achievement/bg-blue.png'
 import { PhUserFocus, PhCoins, PhArrowLeft } from '@phosphor-icons/vue'
 import { getAchievementsPageInfo } from '@/services/achievement.service'
-import type { AchievementPageInfo } from '@/types/achievement.type'
+import type { AchievementPageInfo } from '@/types/achievement.types'
 import { initializeLiff } from '@/services/liff.service'
 import type { StoreItem } from '@/types/achievement.types'
 import type { CSSProperties } from 'vue'
 
+/* รูปเหรียญ coin (on/off) */
+import b10On from '@/assets/achievement/badges/10-on.png'
+import b30On from '@/assets/achievement/badges/30-on.png'
+import b60On from '@/assets/achievement/badges/60-on.png'
+import b90On from '@/assets/achievement/badges/90-on.png'
+import b10Off from '@/assets/achievement/badges/10-off.png'
+import b30Off from '@/assets/achievement/badges/30-off.png'
+import b60Off from '@/assets/achievement/badges/60-off.png'
+import b90Off from '@/assets/achievement/badges/90-off.png'
+
+/* รูปมะลิ */
+import m0 from '@/assets/mali-level/mali level 0.png'
+import m1 from '@/assets/mali-level/mali level 1.png'
+import m2 from '@/assets/mali-level/mali level 2.png'
+import m3 from '@/assets/mali-level/mali level 3.png'
+import m4 from '@/assets/mali-level/mali level 4.png'
+import m5 from '@/assets/mali-level/mali level 5.png'
+
+/* helper types (ไม่ใช้ any) */
+type CoinProgress = number | { current: number; target?: number }
+type CoinStage = { threshold: number; imgActive: string; imgInactive: string }
+
+function isCoinObj(v: unknown): v is { current: number; target?: number } {
+  return (
+    typeof v === 'object' &&
+    v !== null &&
+    'current' in (v as Record<string, unknown>) &&
+    typeof (v as Record<string, unknown>).current === 'number'
+  )
+}
+
 const frameMap = Object.fromEntries(
   Object.entries(
-    import.meta.glob('@/assets/frame/*', {
-      eager: true,
-      import: 'default',
-      query: '?url',
-    }),
+    import.meta.glob('@/assets/frame/*', { eager: true, import: 'default', query: '?url' }),
   ).map(([path, url]) => [path.split('/').pop()!, url as string]),
 )
 
@@ -95,6 +138,7 @@ export default {
     FrameStore,
     ProgressCoin,
     Mali,
+    AchieveShareButton,
     PhUserFocus,
     PhCoins,
     PhArrowLeft,
@@ -120,10 +164,9 @@ export default {
   },
   async mounted() {
     await initializeLiff('VITE_LIFF_ID_ACHIEVEMENT').then(async () => {
-      await liff.getProfile().then((profile) => {
-        this.username = profile.displayName
-        this.profilePic = profile.pictureUrl || ''
-      })
+      const p = await liff.getProfile()
+      this.username = p.displayName
+      this.profilePic = p.pictureUrl || ''
       this.pageInfo = await getAchievementsPageInfo()
       this.currentFrame = this.pageInfo?.currentFrame || null
     })
@@ -139,14 +182,57 @@ export default {
   },
   computed: {
     ringStyle(): CSSProperties & Record<'--ring-scale' | '--ring-x' | '--ring-y', string> {
-      const scale = 1.6
-      const dx = 0
-      const dy = 0
-      return {
-        '--ring-scale': String(scale),
-        '--ring-x': `${dx}px`,
-        '--ring-y': `${dy}px`,
-      }
+      return { '--ring-scale': '1.6', '--ring-x': '0px', '--ring-y': '0px' }
+    },
+
+    /* ปรับให้อยู่ในรูปแบบ {current, target} เสมอ (target coin = 90) */
+    normalizedCoin(): { current: number; target: number } {
+      const raw: CoinProgress | undefined = this.pageInfo?.coinProgress as CoinProgress | undefined
+      const current = isCoinObj(raw) ? Number(raw.current) : Number(raw ?? 0)
+      return { current, target: 90 }
+    },
+
+    /* totalDays / target ของมะลิแบบ type-safe */
+    normalizedMali(): { current: number; target: number } {
+      const raw = this.pageInfo?.maliProgress as
+        | number
+        | { current: number; target: number }
+        | undefined
+      const current =
+        typeof raw === 'object' && raw !== null && 'current' in raw
+          ? (raw as { current: number }).current
+          : Number(raw ?? 0)
+
+      // ด่านของมะลิตามที่ใช้ในคอมโพเนนต์ Mali
+      // (0 คือเลเวลเริ่มต้น จึงไม่ใช่ "เป้าหมายถัดไป")
+      const THRESHOLDS = [1, 10, 30, 60, 75, 90]
+
+      // หาเป้าหมายถัดไป; ถ้าเลยสูงสุดแล้ว ให้เท่ากับ 90
+      const next = THRESHOLDS.find((t) => current < t) ?? 90
+
+      return { current, target: next }
+    },
+
+    /* เลือกรูปมะลิตามวัน */
+    maliImageForPoster(): string {
+      const days = this.normalizedMali.current
+      if (days >= 90) return m5
+      if (days >= 75) return m5
+      if (days >= 60) return m4
+      if (days >= 30) return m3
+      if (days >= 10) return m2
+      if (days >= 1) return m1
+      return m0
+    },
+
+    /* รูปเหรียญสำหรับโปสเตอร์ */
+    coinStagesForPoster(): CoinStage[] {
+      return [
+        { threshold: 10, imgActive: b10On, imgInactive: b10Off },
+        { threshold: 30, imgActive: b30On, imgInactive: b30Off },
+        { threshold: 60, imgActive: b60On, imgInactive: b60Off },
+        { threshold: 90, imgActive: b90On, imgInactive: b90Off },
+      ]
     },
   },
 }
@@ -173,9 +259,7 @@ body,
   position: relative;
   display: flex;
   flex-direction: column;
-
-  /* ให้สูงเท่าหน้าจอ และสกอลล์ที่ตัวมันเอง */
-  height: 100dvh; /* ใช้ height แทน min-height */
+  height: 100dvh;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
@@ -185,21 +269,16 @@ body,
 /* ---- พื้นหลังส่วนหัว (full-bleed) ---- */
 .header-section {
   position: relative;
-  /* ทำให้ bg กว้างเท่า viewport เสมอ ไม่พึ่งความกว้างของ content */
   width: 100vw;
   left: 50%;
   margin-left: -50vw;
-
   background-repeat: no-repeat;
   background-position: center top;
   background-size: cover;
-
-  padding-top: 28px; /* เว้นที่สำหรับโปรไฟล์ */
-  padding-bottom: 72px; /* เผื่อซ้อนการ์ด */
+  padding-top: 28px;
+  padding-bottom: 72px;
 }
-
 .header-inner {
-  /* กรอบคอนเทนต์จริง */
   max-width: 360px;
   margin: 0 auto;
   display: flex;
@@ -209,8 +288,8 @@ body,
 
 /* ---- การ์ดลอยทับ bg ---- */
 .overlap-card {
-  width: min(360px, calc(100% - 32px)); /* ย่อหดสองข้างเท่ากัน */
-  margin: -55px auto 0; /* ลอยขึ้นไปซ้อน header */
+  width: min(360px, calc(100% - 32px));
+  margin: -55px auto 0;
   z-index: 2;
   position: relative;
   border-radius: 14px;
@@ -219,7 +298,6 @@ body,
 /* ---- เนื้อหาที่เหลือ ---- */
 .content-section {
   padding-top: 17px;
-  /* ย่อ-หดแบบเดียวกับ DuoStatus: เหลือขอบ 16px ต่อข้างเสมอ */
   width: min(360px, calc(100% - 32px));
   margin: 0 auto 24px;
   background: #fff;
@@ -230,11 +308,10 @@ body,
   display: flex;
   gap: 12px;
   width: 100%;
-  /* อยากให้สองปุ่มอยู่บรรทัดเดียวเมื่อพอที่ */
   justify-content: space-between;
 }
 
-/* ---- ก็อปหน้า user frame มา ---- */
+/* โปรไฟล์ */
 .profile-pic-container {
   position: relative;
   width: clamp(88px, 30vw, 100px);
@@ -289,11 +366,9 @@ body,
   justify-content: center;
   gap: 8px;
   white-space: nowrap;
-
-  flex: 1 1 0; /* ยืดได้ตามที่เหลือ */
-  min-width: 0; /* ป้องกัน overflow */
+  flex: 1 1 0;
+  min-width: 0;
   padding: 10px 10px;
-
   color: #194678;
   font-family: 'Noto Looped Thai UI';
   font-size: 16px;
@@ -306,7 +381,6 @@ body,
     -4px -4px 2px 0 #cbe7fb inset,
     4px 4px 2px 0 #eff8ff inset;
 }
-/* ซ้อนปุ่มเมื่อจอแคบมาก (กันอัดแน่น/ขึ้นบรรทัดใหม่ไม่สวย) */
 @media (max-width: 330px) {
   .btn-row {
     flex-direction: column;
@@ -315,11 +389,11 @@ body,
     width: 100%;
   }
 }
-
 .btn-icon {
-  line-height: 0; /* กันช่องว่างแนวตั้งรอบ SVG */
-  flex-shrink: 0; /* ไม่ให้ไอคอนถูกบีบ */
+  line-height: 0;
+  flex-shrink: 0;
 }
+
 .popup-overlay {
   position: fixed;
   inset: 0;
@@ -350,12 +424,10 @@ body,
   padding: 5px 7px;
   border-radius: 10px;
   gap: 5px;
-  /* button1 */
   font-family: 'Noto Looped Thai UI Medium';
   font-size: 18px;
-  font-style: normal;
   font-weight: 500;
-  line-height: 26px; /* 144.444% */
+  line-height: 26px;
   letter-spacing: 0.18px;
   z-index: 1;
 }
