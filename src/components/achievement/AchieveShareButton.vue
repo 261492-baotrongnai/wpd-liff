@@ -1,3 +1,4 @@
+<!-- AchieveShareButton.vue -->
 <template>
   <div class="share-button-wrapper">
     <button type="button" class="share-button bt-text" @click="openModal">
@@ -150,8 +151,16 @@ async function download() {
 
 async function saveToState(blob: Blob) {
   const file = new File([blob], `meals_${props.date ?? ''}.png`, { type: 'image/png' })
-  await uploadExportPoster(file, liff.getContext()?.userId || '')
+  // อัปโหลดไฟล์ไปเซิร์ฟเวอร์ของคุณ (หากจำเป็นสำหรับฝั่งบอท)
+  try {
+    await uploadExportPoster(file, liff.getContext()?.userId || '')
+  } catch (e) {
+    console.error('uploadExportPoster failed:', e)
+    // ปล่อยให้ไปต่อได้ แม้อัปโหลดพลาด (กรณีบอทใช้แค่คีย์เวิร์ด)
+  }
+  // ส่งคีย์เวิร์ดให้บอทตอบกลับรูป (คีย์เวิร์ดต้องตรงกับที่โปรดักชันรองรับ)
   await liff.sendMessages([{ type: 'text', text: 'โปสเตอร์บันทึกอาหาร' }])
+  // ปิดหน้าต่าง LIFF
   liff.closeWindow()
 }
 </script>
