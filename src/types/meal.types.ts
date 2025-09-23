@@ -19,6 +19,7 @@ export interface Food {
   name: string
   description: string
   grade: string
+  grading_by_rule: boolean
 }
 
 export interface MealStats {

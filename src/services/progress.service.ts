@@ -1,5 +1,5 @@
 import { apiService } from '@/services/api.service'
-import type { Meal, MealStats } from '../types/meal.types'
+import type { Food, Meal, MealStats } from '../types/meal.types'
 
 export async function getAllProgress(): Promise<{ date: string; grade: string }[] | undefined> {
   try {
@@ -25,10 +25,17 @@ export async function getAllProgress(): Promise<{ date: string; grade: string }[
     }
     console.log('Grouped by date:', groupedByDate)
 
+    // Determine if grading should follow the rule: true if any food in any meal has grading_by_rule === true
+    const gradingByRule = response.some((meal) =>
+      meal.foods?.some((f: Food) => f.grading_by_rule === true),
+    )
+
     // Transform grouped data into an array of { date, avgScore }
     const result = Object.entries(groupedByDate).map(([date, { totalScore, count }]) => ({
       date,
-      grade: scoreToGrade(totalScore / count), // Calculate the average score
+      grade: gradingByRule
+        ? scoreToGradeForRuleBased(totalScore / count)
+        : scoreToGrade(totalScore / count),
     }))
 
     console.log('All progress grouped by client timezone:', result)
@@ -176,6 +183,15 @@ export function scoreToGrade(score: number): string {
     return 'A'
   }
   if (score <= 2.5) {
+    return 'B'
+  }
+  return 'C'
+}
+
+export function scoreToGradeForRuleBased(score: number): string {
+  if (score >= 6) {
+    return 'A'
+  } else if (score >= 2) {
     return 'B'
   }
   return 'C'
