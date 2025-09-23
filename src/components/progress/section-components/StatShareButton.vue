@@ -69,7 +69,7 @@
 
 <script setup lang="ts">
 import { Download, Forward, X } from 'lucide-vue-next'
-import { ref, watch, nextTick, computed, onMounted } from 'vue'
+import { ref, watch, nextTick, computed } from 'vue'
 import StatPoster, { type StatPosterExpose } from './StatPoster.vue'
 import liff from '@line/liff'
 import { uploadExportPoster } from '@/services/progress.service'
