@@ -42,7 +42,7 @@
           v-model="value"
           :maxlength="maxLength"
           class="custom-textarea"
-          placeholder="เช่น ส้มตำ, ข้าวต้มกุ้ง"
+          placeholder="พิมพ์ชื่ออาหารตรงนี้"
           ref="autoTextarea"
           @input="autoResize"
         />
