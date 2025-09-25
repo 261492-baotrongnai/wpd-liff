@@ -215,7 +215,7 @@ export async function getMonthSummary(): Promise<MealStats | undefined> {
 export async function uploadExportPoster(file: File, uid: string) {
   const response = await apiService.post(
     `/user-states/upload-export-poster`,
-    { file, uid },
+    { file, uid, state_name: 'date-poster' },
     {
       headers: {
         'Content-Type': 'multipart/form-data',

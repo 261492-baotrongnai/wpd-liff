@@ -50,3 +50,16 @@ export async function setUserFrame(frameId: number) {
   }))
   return { currentFrame, frames }
 }
+
+export async function uploadExportPoster(file: File, uid: string) {
+  const response = await apiService.post(
+    `/user-states/upload-export-poster`,
+    { file, uid, state_name: 'achievement-poster' },
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    },
+  )
+  return response
+}

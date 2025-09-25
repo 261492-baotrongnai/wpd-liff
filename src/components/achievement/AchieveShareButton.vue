@@ -77,7 +77,7 @@ import { Download, Forward, X } from 'lucide-vue-next'
 import { ref, nextTick, watch, onBeforeUnmount } from 'vue'
 import AchievePoster, { type AchievePosterExpose } from './AchievePoster.vue'
 import liff from '@line/liff'
-import { uploadExportPoster } from '@/services/progress.service'
+import { uploadExportPoster } from '../../services/achievement.service'
 
 type CoinStage = { threshold: number; imgActive: string; imgInactive: string }
 
@@ -159,7 +159,7 @@ async function saveToState(blob: Blob) {
     // ปล่อยให้ไปต่อได้ แม้อัปโหลดพลาด (กรณีบอทใช้แค่คีย์เวิร์ด)
   }
   // ส่งคีย์เวิร์ดให้บอทตอบกลับรูป (คีย์เวิร์ดต้องตรงกับที่โปรดักชันรองรับ)
-  await liff.sendMessages([{ type: 'text', text: 'โปสเตอร์บันทึกอาหาร' }])
+  await liff.sendMessages([{ type: 'text', text: 'โปสเตอร์ความสำเร็จ' }])
   // ปิดหน้าต่าง LIFF
   liff.closeWindow()
 }
